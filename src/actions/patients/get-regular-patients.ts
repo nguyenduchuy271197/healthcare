@@ -1,73 +1,134 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { Patient } from "@/types/custom.types";
 
-interface PaginationParams {
-  limit?: number;
-  offset?: number;
+interface RegularPatient {
+  id: string;
+  user_profiles: {
+    full_name: string;
+    phone?: string | null;
+    date_of_birth?: string | null;
+    avatar_url?: string | null;
+  };
+  totalAppointments: number;
+  lastAppointmentDate: string;
+  totalSpent: number;
+  averageRating?: number;
+  chronicConditions?: string[];
+  allergies?: string[];
+  lastDiagnosis?: string;
+  nextFollowUpDate?: string;
 }
 
-interface GetRegularPatientsResult {
+interface RegularPatientsResult {
   success: boolean;
   error?: string;
-  data?: (Patient & {
+  data?: RegularPatient[];
+}
+
+interface AppointmentWithDetails {
+  patient_id: string;
+  appointment_date: string;
+  consultation_fee?: number | null;
+  status: string | null;
+  patients: {
+    id: string;
+    chronic_conditions?: string[] | null;
+    allergies?: string[] | null;
     user_profiles: {
       full_name: string;
       phone?: string | null;
+      date_of_birth?: string | null;
       avatar_url?: string | null;
     };
-    total_appointments: number;
-    last_appointment_date?: string;
-    last_appointment_status?: string;
-  })[];
-  total?: number;
+  };
+  payments?: Array<{
+    amount: number;
+    status: string | null;
+  }> | null;
+  medical_records?: Array<{
+    diagnosis: string;
+    follow_up_date?: string | null;
+    created_at: string | null;
+  }> | null;
+  reviews?: Array<{
+    rating: number;
+  }> | null;
+}
+
+interface PatientData {
+  patient: AppointmentWithDetails["patients"];
+  appointments: AppointmentWithDetails[];
+  totalSpent: number;
+  ratings: number[];
+  lastDiagnosis?: string;
+  nextFollowUpDate?: string;
 }
 
 export async function getRegularPatients(
-  doctorId?: string,
-  pagination: PaginationParams = {}
-): Promise<GetRegularPatientsResult> {
+  minAppointments: number = 3
+): Promise<RegularPatientsResult> {
   try {
     const supabase = createClient();
 
-    let targetDoctorId = doctorId;
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    // If no doctorId provided, get current user
-    if (!targetDoctorId) {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-      if (userError || !user) {
-        return {
-          success: false,
-          error: "User not authenticated",
-        };
-      }
-
-      targetDoctorId = user.id;
+    if (userError || !user) {
+      return {
+        success: false,
+        error: "User not authenticated",
+      };
     }
 
-    const limit = pagination.limit || 20;
-    const offset = pagination.offset || 0;
+    // Verify user is a doctor
+    const { data: userProfile, error: profileError } = await supabase
+      .from("user_profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
 
-    // Get patients who have had multiple appointments with this doctor
-    const { data: patientAppointments, error: appointmentsError } = await supabase
+    if (profileError || userProfile?.role !== "doctor") {
+      return {
+        success: false,
+        error: "Access denied. Only doctors can view patient lists.",
+      };
+    }
+
+    // Get patients with multiple appointments
+    const { data: appointments, error: appointmentsError } = await supabase
       .from("appointments")
       .select(`
         patient_id,
         appointment_date,
+        consultation_fee,
         status,
         patients (
-          *,
+          id,
+          chronic_conditions,
+          allergies,
           user_profiles (
             full_name,
             phone,
+            date_of_birth,
             avatar_url
           )
+        ),
+        payments (
+          amount,
+          status
+        ),
+        medical_records (
+          diagnosis,
+          follow_up_date,
+          created_at
+        ),
+        reviews (
+          rating
         )
       `)
-      .eq("doctor_id", targetDoctorId)
-      .in("status", ["completed", "confirmed"])
+      .eq("doctor_id", user.id)
+      .eq("status", "completed")
       .order("appointment_date", { ascending: false });
 
     if (appointmentsError) {
@@ -77,43 +138,96 @@ export async function getRegularPatients(
       };
     }
 
-    // Group by patient and count appointments
-    const patientMap = new Map();
-    
-    patientAppointments?.forEach(appointment => {
+    if (!appointments || appointments.length === 0) {
+      return {
+        success: true,
+        data: [],
+      };
+    }
+
+    // Group appointments by patient
+    const patientMap = new Map<string, PatientData>();
+
+    appointments.forEach((appointment) => {
       const patientId = appointment.patient_id;
       
       if (!patientMap.has(patientId)) {
         patientMap.set(patientId, {
-          ...appointment.patients,
-          total_appointments: 0,
-          last_appointment_date: null,
-          last_appointment_status: null,
+          patient: appointment.patients,
+          appointments: [],
+          totalSpent: 0,
+          ratings: [],
+          lastDiagnosis: undefined,
+          nextFollowUpDate: undefined,
         });
       }
-      
-      const patient = patientMap.get(patientId);
-      patient.total_appointments++;
-      
-      // Update last appointment info if this is more recent
-      if (!patient.last_appointment_date || appointment.appointment_date > patient.last_appointment_date) {
-        patient.last_appointment_date = appointment.appointment_date;
-        patient.last_appointment_status = appointment.status;
+
+      const patientData = patientMap.get(patientId)!;
+      patientData.appointments.push(appointment as AppointmentWithDetails);
+
+      // Calculate total spent from completed payments
+      if (appointment.payments && Array.isArray(appointment.payments)) {
+        appointment.payments.forEach((payment) => {
+          if (payment.status === "completed") {
+            patientData.totalSpent += payment.amount;
+          }
+        });
+      }
+
+      // Collect ratings
+      if (appointment.reviews && Array.isArray(appointment.reviews)) {
+        appointment.reviews.forEach((review) => {
+          if (review.rating) {
+            patientData.ratings.push(review.rating);
+          }
+        });
+      }
+
+      // Get latest diagnosis and follow-up date
+      if (appointment.medical_records && Array.isArray(appointment.medical_records)) {
+        appointment.medical_records.forEach((record) => {
+          if (record.diagnosis && !patientData.lastDiagnosis) {
+            patientData.lastDiagnosis = record.diagnosis;
+          }
+          if (record.follow_up_date && 
+              (!patientData.nextFollowUpDate || 
+               new Date(record.follow_up_date) > new Date(patientData.nextFollowUpDate))) {
+            patientData.nextFollowUpDate = record.follow_up_date;
+          }
+        });
       }
     });
 
-    // Filter regular patients (those with more than 1 appointment)
-    const regularPatients = Array.from(patientMap.values())
-      .filter(patient => patient.total_appointments > 1)
-      .sort((a, b) => b.total_appointments - a.total_appointments) // Sort by appointment count
-      .slice(offset, offset + limit);
+    // Filter patients with minimum appointments and format data
+    const regularPatients: RegularPatient[] = Array.from(patientMap.entries())
+      .filter(([, data]) => data.appointments.length >= minAppointments)
+      .map(([patientId, data]) => {
+        const averageRating = data.ratings.length > 0
+          ? data.ratings.reduce((sum, rating) => sum + rating, 0) / data.ratings.length
+          : undefined;
 
-    const total = Array.from(patientMap.values()).filter(patient => patient.total_appointments > 1).length;
+        const lastAppointmentDate = data.appointments
+          .sort((a, b) => new Date(b.appointment_date).getTime() - new Date(a.appointment_date).getTime())[0]
+          .appointment_date;
+
+        return {
+          id: patientId,
+          user_profiles: data.patient.user_profiles,
+          totalAppointments: data.appointments.length,
+          lastAppointmentDate,
+          totalSpent: data.totalSpent,
+          averageRating: averageRating ? Math.round(averageRating * 10) / 10 : undefined,
+          chronicConditions: data.patient.chronic_conditions || [],
+          allergies: data.patient.allergies || [],
+          lastDiagnosis: data.lastDiagnosis,
+          nextFollowUpDate: data.nextFollowUpDate,
+        };
+      })
+      .sort((a, b) => b.totalAppointments - a.totalAppointments); // Sort by most appointments
 
     return {
       success: true,
       data: regularPatients,
-      total,
     };
   } catch (error) {
     console.error("Get regular patients error:", error);

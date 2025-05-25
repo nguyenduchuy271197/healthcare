@@ -8,8 +8,6 @@ import { revalidatePath } from "next/cache";
 
 interface CreatePrescriptionWithItemsData {
   medicalRecordId: number;
-  patientId: string;
-  doctorId: string;
   instructions?: string;
   totalAmount: number;
   validUntil?: string;
@@ -39,13 +37,6 @@ export async function createPrescriptionWithItems(
       };
     }
 
-    if (user.id !== data.doctorId) {
-      return {
-        success: false,
-        error: "You can only create prescriptions for yourself",
-      };
-    }
-
     // Get medical record details and verify doctor
     const { data: medicalRecord, error: recordError } = await supabase
       .from("medical_records")
@@ -67,11 +58,18 @@ export async function createPrescriptionWithItems(
       };
     }
 
-    // Create prescription
+    if (!medicalRecord.patient_id) {
+      return {
+        success: false,
+        error: "Medical record must have a valid patient",
+      };
+    }
+
+    // Create prescription using current user as doctor
     const prescriptionData: PrescriptionInsertDto = {
       medical_record_id: data.medicalRecordId,
-      patient_id: data.patientId,
-      doctor_id: data.doctorId,
+      patient_id: medicalRecord.patient_id,
+      doctor_id: user.id,
       instructions: data.instructions,
       total_amount: data.totalAmount,
       valid_until: data.validUntil,
@@ -91,19 +89,24 @@ export async function createPrescriptionWithItems(
       };
     }
 
-    // Create notification for patient
-    await supabase
-      .from("notifications")
-      .insert({
-        user_id: data.patientId,
-        type: "new_prescription" as NotificationType,
-        title: "New Prescription Available",
-        message: "Your doctor has issued a new prescription for you.",
-        data: {
-          prescription_id: prescription.id,
-          medical_record_id: data.medicalRecordId,
-        },
-      });
+    // Create notification for patient (don't fail if this fails)
+    try {
+      await supabase
+        .from("notifications")
+        .insert({
+          user_id: medicalRecord.patient_id,
+          type: "new_prescription" as NotificationType,
+          title: "New Prescription Available",
+          message: "Your doctor has issued a new prescription for you.",
+          data: {
+            prescription_id: prescription.id,
+            medical_record_id: data.medicalRecordId,
+          },
+        });
+    } catch (notificationError) {
+      console.error("Failed to create notification:", notificationError);
+      // Continue without failing the prescription creation
+    }
 
     revalidatePath("/prescriptions");
     revalidatePath("/medical-records");

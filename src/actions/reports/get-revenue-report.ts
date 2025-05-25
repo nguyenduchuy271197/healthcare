@@ -2,80 +2,94 @@
 
 import { createClient } from "@/lib/supabase/server";
 
-interface DateRange {
-  startDate: string;
-  endDate: string;
-}
-
-interface RevenueData {
+interface RevenueReportData {
   totalRevenue: number;
   totalAppointments: number;
-  avgRevenuePerAppointment: number;
   completedAppointments: number;
-  cancelledAppointments: number;
-  monthlyBreakdown: {
+  averageConsultationFee: number;
+  monthlyRevenue: Array<{
     month: string;
     revenue: number;
     appointments: number;
-  }[];
-  paymentMethods: {
+  }>;
+  dailyRevenue: Array<{
+    date: string;
+    revenue: number;
+    appointments: number;
+  }>;
+  paymentMethodBreakdown: Array<{
     method: string;
+    amount: number;
     count: number;
-    total: number;
-  }[];
+  }>;
 }
 
-interface GetRevenueReportResult {
+interface RevenueReportResult {
   success: boolean;
   error?: string;
-  data?: RevenueData;
+  data?: RevenueReportData;
 }
 
 export async function getRevenueReport(
-  doctorId?: string,
-  dateRange?: DateRange
-): Promise<GetRevenueReportResult> {
+  startDate?: string,
+  endDate?: string
+): Promise<RevenueReportResult> {
   try {
     const supabase = createClient();
 
-    let targetDoctorId = doctorId;
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    // If no doctorId provided, get current user
-    if (!targetDoctorId) {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return {
+        success: false,
+        error: "User not authenticated",
+      };
+    }
 
-      if (userError || !user) {
-        return {
-          success: false,
-          error: "User not authenticated",
-        };
-      }
+    // Verify user is a doctor
+    const { data: userProfile, error: profileError } = await supabase
+      .from("user_profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
 
-      targetDoctorId = user.id;
+    if (profileError || userProfile?.role !== "doctor") {
+      return {
+        success: false,
+        error: "Access denied. Only doctors can view revenue reports.",
+      };
     }
 
     // Set default date range if not provided (last 12 months)
-    const endDate = dateRange?.endDate || new Date().toISOString().split('T')[0];
-    const startDate = dateRange?.startDate || new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const defaultEndDate = new Date().toISOString().split("T")[0];
+    const defaultStartDate = new Date(
+      new Date().setFullYear(new Date().getFullYear() - 1)
+    ).toISOString().split("T")[0];
 
-    // Get appointments with payments in date range
+    const queryStartDate = startDate || defaultStartDate;
+    const queryEndDate = endDate || defaultEndDate;
+
+    // Get completed appointments with payments
     const { data: appointments, error: appointmentsError } = await supabase
       .from("appointments")
       .select(`
         id,
-        status,
-        consultation_fee,
         appointment_date,
+        consultation_fee,
+        status,
         payments (
           amount,
-          status,
           payment_method,
+          status,
           paid_at
         )
       `)
-      .eq("doctor_id", targetDoctorId)
-      .gte("appointment_date", startDate)
-      .lte("appointment_date", endDate);
+      .eq("doctor_id", user.id)
+      .eq("status", "completed")
+      .gte("appointment_date", queryStartDate)
+      .lte("appointment_date", queryEndDate)
+      .order("appointment_date", { ascending: false });
 
     if (appointmentsError) {
       return {
@@ -84,68 +98,42 @@ export async function getRevenueReport(
       };
     }
 
-    if (!appointments) {
-      return {
-        success: true,
-        data: {
-          totalRevenue: 0,
-          totalAppointments: 0,
-          avgRevenuePerAppointment: 0,
-          completedAppointments: 0,
-          cancelledAppointments: 0,
-          monthlyBreakdown: [],
-          paymentMethods: [],
-        },
-      };
-    }
+    // Calculate total revenue and statistics
+    const completedPayments = appointments?.filter(
+      (apt) => apt.payments && apt.payments.length > 0 && 
+      apt.payments.some((p) => p.status === "completed")
+    ) || [];
 
-    // Calculate metrics
-    let totalRevenue = 0;
-    let completedAppointments = 0;
-    let cancelledAppointments = 0;
+    const totalRevenue = completedPayments.reduce((sum, apt) => {
+      const paidAmount = apt.payments
+        ?.filter((p) => p.status === "completed")
+        .reduce((pSum, p) => pSum + p.amount, 0) || 0;
+      return sum + paidAmount;
+    }, 0);
+
+    const totalAppointments = appointments?.length || 0;
+    const completedAppointmentsCount = completedPayments.length;
+    const averageConsultationFee = totalAppointments > 0 
+      ? appointments.reduce((sum, apt) => sum + apt.consultation_fee, 0) / totalAppointments
+      : 0;
+
+    // Monthly revenue breakdown
     const monthlyData = new Map<string, { revenue: number; appointments: number }>();
-    const paymentMethodData = new Map<string, { count: number; total: number }>();
-
-    appointments.forEach(appointment => {
-      const date = new Date(appointment.appointment_date);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-
-      // Initialize monthly data if not exists
-      if (!monthlyData.has(monthKey)) {
-        monthlyData.set(monthKey, { revenue: 0, appointments: 0 });
+    completedPayments.forEach((apt) => {
+      const month = new Date(apt.appointment_date).toISOString().slice(0, 7); // YYYY-MM
+      const paidAmount = apt.payments
+        ?.filter((p) => p.status === "completed")
+        .reduce((sum, p) => sum + p.amount, 0) || 0;
+      
+      if (!monthlyData.has(month)) {
+        monthlyData.set(month, { revenue: 0, appointments: 0 });
       }
-
-      const monthData = monthlyData.get(monthKey)!;
-      monthData.appointments++;
-
-      if (appointment.status === "completed") {
-        completedAppointments++;
-      } else if (appointment.status === "cancelled") {
-        cancelledAppointments++;
-      }
-
-      // Process payments
-      if (appointment.payments && Array.isArray(appointment.payments)) {
-        appointment.payments.forEach((payment) => {
-          if (payment.status === "completed") {
-            totalRevenue += payment.amount;
-            monthData.revenue += payment.amount;
-
-            // Track payment methods
-            const method = payment.payment_method;
-            if (!paymentMethodData.has(method)) {
-              paymentMethodData.set(method, { count: 0, total: 0 });
-            }
-            const methodData = paymentMethodData.get(method)!;
-            methodData.count++;
-            methodData.total += payment.amount;
-          }
-        });
-      }
+      const current = monthlyData.get(month)!;
+      current.revenue += paidAmount;
+      current.appointments += 1;
     });
 
-    // Prepare monthly breakdown
-    const monthlyBreakdown = Array.from(monthlyData.entries())
+    const monthlyRevenue = Array.from(monthlyData.entries())
       .map(([month, data]) => ({
         month,
         revenue: data.revenue,
@@ -153,27 +141,67 @@ export async function getRevenueReport(
       }))
       .sort((a, b) => a.month.localeCompare(b.month));
 
-    // Prepare payment methods breakdown
-    const paymentMethods = Array.from(paymentMethodData.entries())
+    // Daily revenue for last 30 days
+    const last30Days = new Date();
+    last30Days.setDate(last30Days.getDate() - 30);
+    const dailyStartDate = last30Days.toISOString().split("T")[0];
+
+    const dailyData = new Map<string, { revenue: number; appointments: number }>();
+    completedPayments
+      .filter((apt) => apt.appointment_date >= dailyStartDate)
+      .forEach((apt) => {
+        const date = apt.appointment_date;
+        const paidAmount = apt.payments
+          ?.filter((p) => p.status === "completed")
+          .reduce((sum, p) => sum + p.amount, 0) || 0;
+        
+        if (!dailyData.has(date)) {
+          dailyData.set(date, { revenue: 0, appointments: 0 });
+        }
+        const current = dailyData.get(date)!;
+        current.revenue += paidAmount;
+        current.appointments += 1;
+      });
+
+    const dailyRevenue = Array.from(dailyData.entries())
+      .map(([date, data]) => ({
+        date,
+        revenue: data.revenue,
+        appointments: data.appointments,
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    // Payment method breakdown
+    const paymentMethodData = new Map<string, { amount: number; count: number }>();
+    completedPayments.forEach((apt) => {
+      apt.payments?.filter((p) => p.status === "completed").forEach((payment) => {
+        const method = payment.payment_method;
+        if (!paymentMethodData.has(method)) {
+          paymentMethodData.set(method, { amount: 0, count: 0 });
+        }
+        const current = paymentMethodData.get(method)!;
+        current.amount += payment.amount;
+        current.count += 1;
+      });
+    });
+
+    const paymentMethodBreakdown = Array.from(paymentMethodData.entries())
       .map(([method, data]) => ({
         method,
+        amount: data.amount,
         count: data.count,
-        total: data.total,
-      }))
-      .sort((a, b) => b.total - a.total);
-
-    const avgRevenuePerAppointment = completedAppointments > 0 ? totalRevenue / completedAppointments : 0;
+      }));
 
     return {
       success: true,
       data: {
         totalRevenue,
-        totalAppointments: appointments.length,
-        avgRevenuePerAppointment: Math.round(avgRevenuePerAppointment * 100) / 100,
-        completedAppointments,
-        cancelledAppointments,
-        monthlyBreakdown,
-        paymentMethods,
+        totalAppointments,
+        completedAppointments: completedAppointmentsCount,
+        averageConsultationFee,
+        monthlyRevenue,
+        dailyRevenue,
+        paymentMethodBreakdown,
       },
     };
   } catch (error) {

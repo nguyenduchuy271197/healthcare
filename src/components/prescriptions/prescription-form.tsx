@@ -167,8 +167,6 @@ export function PrescriptionForm({
       // Create prescription first
       const prescriptionResult = await createPrescriptionWithItems({
         medicalRecordId: medicalRecord.id,
-        patientId: medicalRecord.patient_id,
-        doctorId: medicalRecord.doctor_id,
         instructions: instructions.trim() || undefined,
         totalAmount: calculateTotalAmount(),
         validUntil: validUntil?.toISOString().split("T")[0],
@@ -208,10 +206,14 @@ export function PrescriptionForm({
       if (onSuccess) {
         onSuccess();
       }
-    } catch {
+    } catch (error) {
+      console.error("Prescription creation error:", error);
       toast({
         title: "Lỗi kê đơn thuốc",
-        description: "Có lỗi xảy ra khi tạo đơn thuốc.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Có lỗi xảy ra khi tạo đơn thuốc.",
         variant: "destructive",
       });
     } finally {

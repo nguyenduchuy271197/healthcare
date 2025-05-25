@@ -97,8 +97,8 @@ export function PrescriptionView({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden">
-        <DialogHeader className="print:hidden">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="print:hidden flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Pill className="h-5 w-5" />
             Đơn thuốc điện tử
@@ -130,7 +130,7 @@ export function PrescriptionView({
           </div>
         </DialogHeader>
 
-        <div className="space-y-6 overflow-y-auto print:overflow-visible">
+        <div className="space-y-6 overflow-y-auto flex-1 print:overflow-visible pr-2">
           {/* Prescription Header */}
           <div className="text-center border-b pb-6">
             <h1 className="text-2xl font-bold text-primary mb-2">

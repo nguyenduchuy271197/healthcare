@@ -66,10 +66,16 @@ export async function Header() {
                     Lịch hẹn
                   </Link>
                   <Link
-                    href="/doctor/patients"
+                    href="/patients/regular"
                     className="transition-colors hover:text-foreground/80 text-foreground/60"
                   >
                     Bệnh nhân
+                  </Link>
+                  <Link
+                    href="/reports/revenue"
+                    className="transition-colors hover:text-foreground/80 text-foreground/60"
+                  >
+                    Báo cáo
                   </Link>
                   <Link
                     href="/schedule"

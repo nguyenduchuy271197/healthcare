@@ -153,20 +153,25 @@ export async function generateInvoice(appointmentId: number): Promise<GenerateIn
       paymentId = payment.id;
     }
 
-    // Create notification for patient
-    await supabase
-      .from("notifications")
-      .insert({
-        user_id: appointment.patient_id,
-        type: "payment_success" as NotificationType,
-        title: "Invoice Generated",
-        message: `Invoice ${invoiceNumber} has been generated for your appointment.`,
-        data: {
-          payment_id: paymentId,
-          invoice_number: invoiceNumber,
-          total_amount: totalAmount,
-        },
-      });
+    // Create notification for patient (don't fail if this fails)
+    try {
+      await supabase
+        .from("notifications")
+        .insert({
+          user_id: appointment.patient_id,
+          type: "payment_success" as NotificationType,
+          title: "Invoice Generated",
+          message: `Invoice ${invoiceNumber} has been generated for your appointment.`,
+          data: {
+            payment_id: paymentId,
+            invoice_number: invoiceNumber,
+            total_amount: totalAmount,
+          },
+        });
+    } catch (notificationError) {
+      console.error("Failed to create notification:", notificationError);
+      // Continue without failing the invoice generation
+    }
 
     revalidatePath("/payments");
     revalidatePath("/appointments");

@@ -178,9 +178,9 @@ export function DoctorDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Link href="/patients">
+            <Link href="/patients/regular">
               <Button variant="outline" className="w-full">
-                Danh sách
+                Bệnh nhân thường xuyên
               </Button>
             </Link>
           </CardContent>
@@ -192,9 +192,9 @@ export function DoctorDashboard() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Link href="/reports">
+            <Link href="/reports/revenue">
               <Button variant="outline" className="w-full">
-                Xem báo cáo
+                Thống kê doanh thu
               </Button>
             </Link>
           </CardContent>

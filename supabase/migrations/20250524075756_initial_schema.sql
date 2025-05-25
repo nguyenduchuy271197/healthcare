@@ -19,34 +19,16 @@ create type prescription_status as enum ('active', 'completed', 'cancelled');
 -- ============================================================================
 
 -- Bucket for user profile images
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values (
-  'profile-images',
-  'profile-images',
-  true,
-  5242880, -- 5MB limit
-  array['image/jpeg', 'image/png', 'image/webp']
-);
+insert into storage.buckets (id, name)
+values ('profile-images', 'profile-images');
 
 -- Bucket for medical documents (private)
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values (
-  'medical-documents',
-  'medical-documents',
-  false,
-  10485760, -- 10MB limit
-  array['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-);
+insert into storage.buckets (id, name)
+values ('medical-documents', 'medical-documents');
 
 -- Bucket for prescriptions and invoices (private)
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values (
-  'prescriptions',
-  'prescriptions',
-  false,
-  5242880, -- 5MB limit
-  array['application/pdf', 'image/jpeg', 'image/png']
-);
+insert into storage.buckets (id, name)
+values ('prescriptions', 'prescriptions');
 
 -- ============================================================================
 -- MAIN TABLES
