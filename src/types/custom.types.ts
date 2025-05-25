@@ -58,3 +58,49 @@ export type PaymentStatus = Database["public"]["Enums"]["payment_status"];
 export type PaymentMethod = Database["public"]["Enums"]["payment_method"];
 export type NotificationType = Database["public"]["Enums"]["notification_type"];
 export type PrescriptionStatus = Database["public"]["Enums"]["prescription_status"];
+
+// Extended types for components
+export type MedicalRecordWithDetails = MedicalRecord & {
+  appointments: {
+    appointment_date: string;
+    appointment_time: string;
+    reason: string;
+  };
+  doctors: {
+    user_profiles: {
+      full_name: string;
+      specialization?: string;
+    };
+  };
+  prescriptions?: Array<Prescription & {
+    prescription_items: Array<PrescriptionItem>;
+  }>;
+};
+
+export type PrescriptionWithItems = Prescription & {
+  prescription_items: Array<PrescriptionItem>;
+};
+
+export type AppointmentWithPatient = Appointment & {
+  patients: {
+    user_profiles: {
+      full_name: string;
+      phone?: string;
+    };
+  };
+  medical_records?: Array<MedicalRecord & {
+    patients: {
+      user_profiles: {
+        full_name: string;
+      };
+    };
+  }>;
+};
+
+export type MedicalRecordForPrescription = MedicalRecord & {
+  patients: {
+    user_profiles: {
+      full_name: string;
+    };
+  };
+};

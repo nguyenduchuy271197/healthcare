@@ -60,7 +60,7 @@ export async function Header() {
               {userProfile.role === "doctor" && (
                 <>
                   <Link
-                    href="/appointments"
+                    href="/appointments/manage"
                     className="transition-colors hover:text-foreground/80 text-foreground/60"
                   >
                     Lịch hẹn

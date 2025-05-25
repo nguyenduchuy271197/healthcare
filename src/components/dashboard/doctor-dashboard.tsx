@@ -164,7 +164,7 @@ export function DoctorDashboard() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Link href="/appointments">
+            <Link href="/appointments/manage">
               <Button variant="outline" className="w-full">
                 Quản lý
               </Button>

@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { PatientMedicalRecords } from "@/components/medical-records/patient-medical-records";
+import { DoctorAppointmentList } from "@/components/appointments/doctor-appointment-list";
 
-export default async function MedicalRecordsPage() {
+export default async function ManageAppointmentsPage() {
   const supabase = createClient();
 
   const {
@@ -20,7 +20,7 @@ export default async function MedicalRecordsPage() {
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.role !== "patient") {
+  if (!profile || profile.role !== "doctor") {
     redirect("/dashboard");
   }
 
@@ -28,13 +28,13 @@ export default async function MedicalRecordsPage() {
     <div className="container mx-auto py-8">
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Hồ sơ Y tế</h1>
+          <h1 className="text-3xl font-bold">Quản lý lịch hẹn</h1>
           <p className="text-muted-foreground">
-            Xem lịch sử khám bệnh và đơn thuốc của bạn
+            Xem và quản lý các lịch hẹn của bệnh nhân
           </p>
         </div>
 
-        <PatientMedicalRecords patientId={user.id} />
+        <DoctorAppointmentList doctorId={user.id} />
       </div>
     </div>
   );

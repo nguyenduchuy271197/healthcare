@@ -116,6 +116,10 @@ export { getPatientAppointmentHistory } from "./patients/get-patient-appointment
 
 // Advanced prescription actions
 export { addPrescriptionItem } from "./prescriptions/add-prescription-item";
+export { 
+  createPrescriptionWithItems, 
+  addPrescriptionItemWithPrice 
+} from "./prescriptions/create-prescription-with-items";
 
 // Follow-up appointment actions
 export { createFollowupAppointment } from "./appointments/create-followup-appointment";
