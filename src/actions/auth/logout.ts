@@ -1,8 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 interface LogoutUserResult {
   success: boolean;
@@ -22,8 +20,9 @@ export async function logoutUser(): Promise<LogoutUserResult> {
       };
     }
 
-    revalidatePath("/", "layout");
-    redirect("/auth/login");
+    return {
+      success: true,
+    };
   } catch (error) {
     console.error("Logout error:", error);
     return {
