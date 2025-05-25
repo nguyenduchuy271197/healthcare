@@ -19,17 +19,12 @@ import {
   DollarSign,
   Settings,
 } from "lucide-react";
-import { Profile, Appointment } from "@/types/custom.types";
+import { Appointment } from "@/types/custom.types";
 import { getDoctorAppointments } from "@/actions";
 
-interface DoctorDashboardProps {
-  user: Profile;
-}
-
-export function DoctorDashboard({ user }: DoctorDashboardProps) {
+export function DoctorDashboard() {
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  console.log(user);
 
   useEffect(() => {
     async function loadAppointments() {

@@ -11,88 +11,85 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Calendar,
-  Clock,
-  Search,
-  FileText,
-  CreditCard,
-  Star,
-} from "lucide-react";
-import { Profile, Appointment, Patient } from "@/types/custom.types";
+import { Calendar, Clock, Search, FileText, CreditCard } from "lucide-react";
+import { Appointment, Patient } from "@/types/custom.types";
 import { getPatientAppointments, getPatientProfile } from "@/actions";
 
-interface PatientDashboardProps {
-  user: Profile;
-}
+type AppointmentWithDoctor = Appointment & {
+  doctors: {
+    user_profiles: {
+      full_name: string;
+      avatar_url?: string | null;
+    };
+    specialization?: string | null;
+    clinic_address?: string | null;
+  };
+};
 
-export function PatientDashboard({ user }: PatientDashboardProps) {
+export function PatientDashboard() {
   const [upcomingAppointments, setUpcomingAppointments] = useState<
-    Appointment[]
+    AppointmentWithDoctor[]
   >([]);
-  const [patientData, setPatientData] = useState<Patient | null>(null);
+  const [patientInfo, setPatientInfo] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingPatient, setIsLoadingPatient] = useState(true);
-  console.log(user);
 
   useEffect(() => {
-    async function loadAppointments() {
+    async function loadDashboardData() {
       try {
-        const result = await getPatientAppointments();
-        if (result.success && result.data) {
-          // Filter upcoming appointments
-          const upcoming = result.data
-            .filter(
-              (apt) => apt.status === "confirmed" || apt.status === "pending"
-            )
+        // Load upcoming appointments
+        const appointmentsResult = await getPatientAppointments();
+
+        if (appointmentsResult.success && appointmentsResult.data) {
+          // Filter for confirmed appointments and limit to 3
+          const upcoming = appointmentsResult.data
+            .filter((apt) => apt.status === "confirmed")
             .slice(0, 3);
           setUpcomingAppointments(upcoming);
         }
+
+        // Load patient profile info
+        const patientResult = await getPatientProfile();
+        if (patientResult.success && patientResult.data) {
+          setPatientInfo(patientResult.data);
+        }
       } catch (error) {
-        console.error("Error loading appointments:", error);
+        console.error("Error loading dashboard data:", error);
       } finally {
         setIsLoading(false);
       }
     }
 
-    async function loadPatientData() {
-      try {
-        const result = await getPatientProfile();
-        if (result.success && result.data) {
-          setPatientData(result.data);
-        }
-      } catch (error) {
-        console.error("Error loading patient data:", error);
-      } finally {
-        setIsLoadingPatient(false);
-      }
-    }
-
-    loadAppointments();
-    loadPatientData();
+    loadDashboardData();
   }, []);
 
-  function getStatusBadge(status: string) {
-    const variants = {
-      pending: "secondary",
-      confirmed: "default",
-      completed: "outline",
-      cancelled: "destructive",
-      rejected: "destructive",
-    } as const;
+  function formatDate(dateString: string) {
+    return new Date(dateString).toLocaleDateString("vi-VN", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  }
 
-    const labels = {
-      pending: "Chờ xác nhận",
-      confirmed: "Đã xác nhận",
-      completed: "Hoàn thành",
-      cancelled: "Đã hủy",
-      rejected: "Bị từ chối",
-    };
+  function formatTime(timeString: string) {
+    return timeString.slice(0, 5); // HH:MM format
+  }
 
+  if (isLoading) {
     return (
-      <Badge variant={variants[status as keyof typeof variants] || "secondary"}>
-        {labels[status as keyof typeof labels] || status}
-      </Badge>
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="animate-pulse space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
     );
   }
 
@@ -100,217 +97,214 @@ export function PatientDashboard({ user }: PatientDashboardProps) {
     <div className="space-y-6">
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tìm bác sĩ</CardTitle>
-            <Search className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <Link href="/doctors">
-              <Button className="w-full">Tìm kiếm</Button>
-            </Link>
-          </CardContent>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Link href="/doctors">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-2">
+                <Search className="h-8 w-8 text-blue-600" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Tìm bác sĩ
+                  </p>
+                  <p className="text-2xl font-bold">Đặt lịch</p>
+                </div>
+              </div>
+            </CardContent>
+          </Link>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Lịch hẹn</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <Link href="/appointments">
-              <Button variant="outline" className="w-full">
-                Xem tất cả
-              </Button>
-            </Link>
-          </CardContent>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Link href="/appointments">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-8 w-8 text-green-600" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Lịch hẹn
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {upcomingAppointments.length}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Link>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Hồ sơ y tế</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <Link href="/medical-records">
-              <Button variant="outline" className="w-full">
-                Quản lý hồ sơ
-              </Button>
-            </Link>
-          </CardContent>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Link href="/medical-records">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-2">
+                <FileText className="h-8 w-8 text-purple-600" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Hồ sơ Y tế
+                  </p>
+                  <p className="text-2xl font-bold">Xem</p>
+                </div>
+              </div>
+            </CardContent>
+          </Link>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Thanh toán</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <Link href="/payments">
-              <Button variant="outline" className="w-full">
-                Lịch sử
-              </Button>
-            </Link>
-          </CardContent>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Link href="/payments">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-2">
+                <CreditCard className="h-8 w-8 text-orange-600" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Thanh toán
+                  </p>
+                  <p className="text-2xl font-bold">Lịch sử</p>
+                </div>
+              </div>
+            </CardContent>
+          </Link>
         </Card>
       </div>
 
-      {/* Upcoming Appointments */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Lịch hẹn sắp tới</CardTitle>
-          <CardDescription>
-            Các cuộc hẹn khám bệnh trong thời gian tới
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center space-x-4">
-                  <div className="h-12 w-12 rounded-lg bg-muted animate-pulse" />
-                  <div className="space-y-2 flex-1">
-                    <div className="h-4 bg-muted rounded animate-pulse" />
-                    <div className="h-3 bg-muted rounded w-2/3 animate-pulse" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : upcomingAppointments.length > 0 ? (
-            <div className="space-y-4">
-              {upcomingAppointments.map((appointment) => (
-                <div
-                  key={appointment.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="flex flex-col items-center justify-center w-12 h-12 bg-blue-100 rounded-lg">
-                      <Calendar className="h-4 w-4 text-blue-600" />
-                      <span className="text-xs text-blue-600 font-medium">
-                        {new Date(appointment.appointment_date).getDate()}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium">
-                        {new Date(
-                          appointment.appointment_date
-                        ).toLocaleDateString("vi-VN", {
-                          weekday: "long",
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </p>
-                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        <span>{appointment.appointment_time}</span>
-                        <span>•</span>
-                        <span>{appointment.reason}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {getStatusBadge(appointment.status || "pending")}
-                  </div>
-                </div>
-              ))}
-              <Link href="/appointments">
-                <Button variant="outline" className="w-full">
-                  Xem tất cả lịch hẹn
-                </Button>
-              </Link>
-            </div>
-          ) : (
-            <div className="text-center py-6">
-              <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-2 text-sm font-medium">Chưa có lịch hẹn</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Bắt đầu bằng việc tìm kiếm bác sĩ và đặt lịch hẹn
-              </p>
-              <div className="mt-6">
-                <Link href="/doctors">
-                  <Button>Tìm bác sĩ</Button>
-                </Link>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Health Summary */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Upcoming Appointments */}
         <Card>
           <CardHeader>
-            <CardTitle>Thông tin sức khỏe</CardTitle>
-            <CardDescription>Tóm tắt thông tin y tế cá nhân</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Lịch hẹn sắp tới
+            </CardTitle>
+            <CardDescription>Các cuộc hẹn đã được xác nhận</CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoadingPatient ? (
-              <div className="space-y-2">
-                <div className="h-4 bg-muted rounded animate-pulse" />
-                <div className="h-4 bg-muted rounded animate-pulse" />
-                <div className="h-4 bg-muted rounded animate-pulse" />
-              </div>
+            {upcomingAppointments.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Không có lịch hẹn nào sắp tới
+              </p>
             ) : (
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Nhóm máu:
-                  </span>
-                  <span className="text-sm font-medium">
-                    {patientData?.blood_type || "Chưa cập nhật"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Dị ứng:</span>
-                  <span className="text-sm font-medium">
-                    {patientData?.allergies && patientData.allergies.length > 0
-                      ? `${patientData.allergies.length} loại`
-                      : "Chưa có"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Bệnh mãn tính:
-                  </span>
-                  <span className="text-sm font-medium">
-                    {patientData?.chronic_conditions &&
-                    patientData.chronic_conditions.length > 0
-                      ? `${patientData.chronic_conditions.length} bệnh`
-                      : "Không"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Bảo hiểm:
-                  </span>
-                  <span className="text-sm font-medium">
-                    {patientData?.insurance_provider || "Chưa cập nhật"}
-                  </span>
-                </div>
+              <div className="space-y-3">
+                {upcomingAppointments.map((appointment) => (
+                  <div
+                    key={appointment.id}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
+                    <div>
+                      <p className="font-medium">
+                        {appointment.doctors.user_profiles.full_name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {appointment.doctors.specialization || "Bác sĩ đa khoa"}
+                      </p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <Calendar className="h-3 w-3" />
+                        <span className="text-xs">
+                          {formatDate(appointment.appointment_date)}
+                        </span>
+                        <Clock className="h-3 w-3 ml-2" />
+                        <span className="text-xs">
+                          {formatTime(appointment.appointment_time)}
+                        </span>
+                      </div>
+                    </div>
+                    <Badge variant="outline">{appointment.status}</Badge>
+                  </div>
+                ))}
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/appointments">Xem tất cả</Link>
+                </Button>
               </div>
             )}
-            <Link href="/medical-records">
-              <Button variant="outline" className="w-full mt-4">
-                Cập nhật hồ sơ y tế
-              </Button>
-            </Link>
           </CardContent>
         </Card>
 
+        {/* Health Summary */}
         <Card>
           <CardHeader>
-            <CardTitle>Đánh giá gần đây</CardTitle>
-            <CardDescription>Đánh giá bác sĩ sau các lần khám</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Tóm tắt sức khỏe
+            </CardTitle>
+            <CardDescription>Thông tin y tế cơ bản</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-6">
-              <Star className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-2 text-sm font-medium">Chưa có đánh giá</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Đánh giá bác sĩ sau khi hoàn thành khám bệnh
-              </p>
-            </div>
+            {patientInfo ? (
+              <div className="space-y-3">
+                {patientInfo.blood_type && (
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Nhóm máu:
+                    </span>
+                    <span className="text-sm font-medium">
+                      {patientInfo.blood_type}
+                    </span>
+                  </div>
+                )}
+
+                {patientInfo.allergies && patientInfo.allergies.length > 0 && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">
+                      Dị ứng:
+                    </span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {patientInfo.allergies
+                        .slice(0, 3)
+                        .map((allergy, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="text-xs"
+                          >
+                            {allergy}
+                          </Badge>
+                        ))}
+                      {patientInfo.allergies.length > 3 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{patientInfo.allergies.length - 3} khác
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {patientInfo.chronic_conditions &&
+                  patientInfo.chronic_conditions.length > 0 && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">
+                        Bệnh mãn tính:
+                      </span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {patientInfo.chronic_conditions
+                          .slice(0, 2)
+                          .map((condition, index) => (
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {condition}
+                            </Badge>
+                          ))}
+                        {patientInfo.chronic_conditions.length > 2 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{patientInfo.chronic_conditions.length - 2} khác
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/medical-records">Xem chi tiết</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground mb-3">
+                  Chưa có thông tin y tế
+                </p>
+                <Button variant="outline" asChild>
+                  <Link href="/medical-records">Tạo hồ sơ y tế</Link>
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

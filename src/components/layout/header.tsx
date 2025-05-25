@@ -27,64 +27,60 @@ export async function Header() {
             <Stethoscope className="h-6 w-6" />
             <span className="hidden font-bold sm:inline-block">HealthCare</span>
           </Link>
-          <nav className="flex items-center space-x-6 text-sm font-medium">
-            {userProfile?.role === "patient" && (
-              <>
-                <Link
-                  href="/dashboard"
-                  className="transition-colors hover:text-foreground/80 text-foreground/60"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/doctors"
-                  className="transition-colors hover:text-foreground/80 text-foreground/60"
-                >
-                  Tìm bác sĩ
-                </Link>
-                <Link
-                  href="/appointments"
-                  className="transition-colors hover:text-foreground/80 text-foreground/60"
-                >
-                  Lịch hẹn
-                </Link>
-                <Link
-                  href="/medical-records"
-                  className="transition-colors hover:text-foreground/80 text-foreground/60"
-                >
-                  Hồ sơ Y tế
-                </Link>
-              </>
-            )}
-            {userProfile?.role === "doctor" && (
-              <>
-                <Link
-                  href="/dashboard"
-                  className="transition-colors hover:text-foreground/80 text-foreground/60"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/appointments"
-                  className="transition-colors hover:text-foreground/80 text-foreground/60"
-                >
-                  Lịch hẹn
-                </Link>
-                <Link
-                  href="/patients"
-                  className="transition-colors hover:text-foreground/80 text-foreground/60"
-                >
-                  Bệnh nhân
-                </Link>
-                <Link
-                  href="/schedule"
-                  className="transition-colors hover:text-foreground/80 text-foreground/60"
-                >
-                  Lịch làm việc
-                </Link>
-              </>
-            )}
-          </nav>
+          {userProfile && (
+            <nav className="flex items-center space-x-6 text-sm font-medium">
+              <Link
+                href="/dashboard"
+                className="transition-colors hover:text-foreground/80 text-foreground/60"
+              >
+                Dashboard
+              </Link>
+              {userProfile.role === "patient" && (
+                <>
+                  <Link
+                    href="/doctors"
+                    className="transition-colors hover:text-foreground/80 text-foreground/60"
+                  >
+                    Tìm bác sĩ
+                  </Link>
+                  <Link
+                    href="/appointments"
+                    className="transition-colors hover:text-foreground/80 text-foreground/60"
+                  >
+                    Lịch hẹn
+                  </Link>
+                  <Link
+                    href="/medical-records"
+                    className="transition-colors hover:text-foreground/80 text-foreground/60"
+                  >
+                    Hồ sơ Y tế
+                  </Link>
+                </>
+              )}
+              {userProfile.role === "doctor" && (
+                <>
+                  <Link
+                    href="/doctor/appointments"
+                    className="transition-colors hover:text-foreground/80 text-foreground/60"
+                  >
+                    Lịch hẹn
+                  </Link>
+                  <Link
+                    href="/doctor/patients"
+                    className="transition-colors hover:text-foreground/80 text-foreground/60"
+                  >
+                    Bệnh nhân
+                  </Link>
+                  <Link
+                    href="/doctor/schedule"
+                    className="transition-colors hover:text-foreground/80 text-foreground/60"
+                  >
+                    Lịch làm việc
+                  </Link>
+                </>
+              )}
+            </nav>
+          )}
         </div>
 
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">

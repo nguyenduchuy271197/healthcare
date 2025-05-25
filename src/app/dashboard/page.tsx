@@ -26,19 +26,19 @@ export default async function DashboardPage() {
     <div className="container mx-auto py-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">
-          Chào mừng, {userProfile.full_name}
+          Chào mừng, {userProfile.full_name}!
         </h1>
         <p className="text-muted-foreground">
-          {userProfile.role === "doctor"
-            ? "Quản lý lịch hẹn và bệnh nhân của bạn"
-            : "Quản lý lịch khám và sức khỏe của bạn"}
+          {userProfile.role === "patient"
+            ? "Quản lý lịch hẹn và theo dõi sức khỏe của bạn"
+            : "Quản lý bệnh nhân và lịch làm việc của bạn"}
         </p>
       </div>
 
       {userProfile.role === "patient" ? (
-        <PatientDashboard user={userProfile} />
+        <PatientDashboard />
       ) : (
-        <DoctorDashboard user={userProfile} />
+        <DoctorDashboard />
       )}
     </div>
   );
