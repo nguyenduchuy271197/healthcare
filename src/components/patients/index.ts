@@ -1,0 +1,1 @@
+export { PatientInfoDialog } from "./patient-info-dialog"; 
