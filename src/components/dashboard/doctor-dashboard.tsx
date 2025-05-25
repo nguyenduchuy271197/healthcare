@@ -18,9 +18,11 @@ import {
   FileText,
   DollarSign,
   Settings,
+  User,
 } from "lucide-react";
 import { Appointment } from "@/types/custom.types";
 import { getDoctorAppointments } from "@/actions";
+import { DoctorProfileSummary } from "@/components/doctors/doctor-profile-summary";
 
 export function DoctorDashboard() {
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
@@ -127,7 +129,21 @@ export function DoctorDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Hồ sơ chuyên môn
+            </CardTitle>
+            <User className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <Link href="/profile">
+              <Button className="w-full">Cập nhật</Button>
+            </Link>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Lịch làm việc</CardTitle>
@@ -135,7 +151,9 @@ export function DoctorDashboard() {
           </CardHeader>
           <CardContent>
             <Link href="/schedule">
-              <Button className="w-full">Cài đặt</Button>
+              <Button variant="outline" className="w-full">
+                Cài đặt
+              </Button>
             </Link>
           </CardContent>
         </Card>
@@ -266,23 +284,7 @@ export function DoctorDashboard() {
 
       {/* Recent Activity */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Hoạt động gần đây</CardTitle>
-            <CardDescription>
-              Các hoạt động mới nhất trong hệ thống
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-6">
-              <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-2 text-sm font-medium">Chưa có hoạt động</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Các hoạt động sẽ hiển thị ở đây
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <DoctorProfileSummary />
 
         <Card>
           <CardHeader>

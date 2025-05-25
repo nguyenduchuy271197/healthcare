@@ -2,6 +2,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUserProfile } from "@/actions";
 import { ProfileForm } from "@/components/profile/profile-form";
+import { DoctorProfileForm } from "@/components/doctors/doctor-profile-form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { User, Stethoscope } from "lucide-react";
 
 export default async function ProfilePage() {
   const supabase = createClient();
@@ -19,16 +22,44 @@ export default async function ProfilePage() {
     redirect("/auth/login");
   }
 
+  const userProfile = profileResult.data;
+
   return (
     <div className="container mx-auto py-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Hồ sơ cá nhân</h1>
         <p className="text-muted-foreground">
-          Quản lý thông tin cá nhân và cài đặt tài khoản
+          Quản lý thông tin cá nhân và hồ sơ chuyên môn
         </p>
       </div>
 
-      <ProfileForm user={profileResult.data} />
+      {userProfile.role === "doctor" ? (
+        <Tabs defaultValue="personal" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="personal" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Thông tin cá nhân
+            </TabsTrigger>
+            <TabsTrigger
+              value="professional"
+              className="flex items-center gap-2"
+            >
+              <Stethoscope className="h-4 w-4" />
+              Hồ sơ chuyên môn
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="personal">
+            <ProfileForm user={userProfile} />
+          </TabsContent>
+
+          <TabsContent value="professional">
+            <DoctorProfileForm />
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <ProfileForm user={userProfile} />
+      )}
     </div>
   );
 }
