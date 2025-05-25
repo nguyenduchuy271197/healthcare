@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -13,14 +10,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   Calendar as CalendarIcon,
@@ -29,7 +18,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Doctor } from "@/types/custom.types";
-import { getAvailableSlots, createAppointment } from "@/actions";
+import { getAvailableSlots } from "@/actions";
+import { AppointmentBookingForm } from "@/components/appointments/appointment-booking-form";
 
 interface DoctorScheduleProps {
   doctor: Doctor & {
@@ -62,13 +52,7 @@ export function DoctorSchedule({ doctor }: DoctorScheduleProps) {
   const [selectedSlot, setSelectedSlot] = useState<string>("");
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [showBookingDialog, setShowBookingDialog] = useState(false);
-  const [isBooking, setIsBooking] = useState(false);
-  const [bookingForm, setBookingForm] = useState({
-    reason: "",
-    notes: "",
-  });
 
-  const router = useRouter();
   const { toast } = useToast();
 
   const loadAvailableSlots = useCallback(async () => {
@@ -115,60 +99,14 @@ export function DoctorSchedule({ doctor }: DoctorScheduleProps) {
     setShowBookingDialog(true);
   }
 
-  function handleBookingFormChange(field: string, value: string) {
-    setBookingForm((prev) => ({ ...prev, [field]: value }));
+  function handleBookingSuccess() {
+    // Reload available slots after successful booking
+    loadAvailableSlots();
   }
 
-  async function handleBookAppointment() {
-    if (!selectedDate || !selectedSlot || !bookingForm.reason.trim()) {
-      toast({
-        title: "Thông tin không đầy đủ",
-        description: "Vui lòng điền đầy đủ thông tin đặt lịch.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsBooking(true);
-
-    try {
-      const appointmentData = {
-        doctorId: doctor.id,
-        appointmentDate: selectedDate.toISOString().split("T")[0],
-        appointmentTime: selectedSlot,
-        reason: bookingForm.reason.trim(),
-        notes: bookingForm.notes.trim() || undefined,
-        durationMinutes: 30,
-      };
-
-      const result = await createAppointment(appointmentData);
-
-      if (result.success) {
-        toast({
-          title: "Đặt lịch thành công",
-          description: "Lịch hẹn đã được tạo. Vui lòng chờ bác sĩ xác nhận.",
-        });
-        setShowBookingDialog(false);
-        setSelectedSlot("");
-        setBookingForm({ reason: "", notes: "" });
-        loadAvailableSlots(); // Reload slots
-        router.push("/appointments");
-      } else {
-        toast({
-          title: "Đặt lịch thất bại",
-          description: result.error || "Có lỗi xảy ra khi đặt lịch.",
-          variant: "destructive",
-        });
-      }
-    } catch {
-      toast({
-        title: "Lỗi hệ thống",
-        description: "Có lỗi xảy ra. Vui lòng thử lại.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsBooking(false);
-    }
+  function handleBookingClose() {
+    setShowBookingDialog(false);
+    setSelectedSlot("");
   }
 
   function isDateDisabled(date: Date) {
@@ -297,72 +235,17 @@ export function DoctorSchedule({ doctor }: DoctorScheduleProps) {
         </Card>
       </div>
 
-      {/* Booking Dialog */}
-      <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Đặt lịch khám bệnh</DialogTitle>
-            <DialogDescription>
-              Bác sĩ {doctor.user_profiles.full_name} -{" "}
-              {selectedDate && formatDate(selectedDate)} lúc {selectedSlot}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="reason">Lý do khám bệnh *</Label>
-              <Textarea
-                id="reason"
-                placeholder="Mô tả triệu chứng hoặc lý do cần khám..."
-                value={bookingForm.reason}
-                onChange={(e) =>
-                  handleBookingFormChange("reason", e.target.value)
-                }
-                rows={3}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notes">Ghi chú thêm</Label>
-              <Textarea
-                id="notes"
-                placeholder="Thông tin bổ sung (tùy chọn)..."
-                value={bookingForm.notes}
-                onChange={(e) =>
-                  handleBookingFormChange("notes", e.target.value)
-                }
-                rows={2}
-              />
-            </div>
-
-            <div className="bg-muted p-3 rounded-lg">
-              <div className="flex items-center justify-between text-sm">
-                <span>Phí khám:</span>
-                <span className="font-medium">
-                  {doctor.consultation_fee?.toLocaleString("vi-VN")} VNĐ
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowBookingDialog(false)}
-              disabled={isBooking}
-            >
-              Hủy
-            </Button>
-            <Button
-              onClick={handleBookAppointment}
-              disabled={isBooking || !bookingForm.reason.trim()}
-            >
-              {isBooking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Đặt lịch
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Appointment Booking Form */}
+      {selectedDate && selectedSlot && (
+        <AppointmentBookingForm
+          doctor={doctor}
+          selectedDate={selectedDate}
+          selectedTime={selectedSlot}
+          isOpen={showBookingDialog}
+          onClose={handleBookingClose}
+          onSuccess={handleBookingSuccess}
+        />
+      )}
     </div>
   );
 }

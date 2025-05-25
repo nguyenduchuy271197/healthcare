@@ -11,9 +11,19 @@ interface GetPatientAppointmentsResult {
       user_profiles: {
         full_name: string;
         avatar_url?: string | null;
+        phone?: string | null;
       };
       specialization?: string | null;
       clinic_address?: string | null;
+      consultation_fee?: number | null;
+      doctor_schedules: {
+        id: number;
+        day_of_week: number;
+        start_time: string;
+        end_time: string;
+        slot_duration_minutes: number | null;
+        is_active: boolean | null;
+      }[];
     };
   })[];
 }
@@ -48,10 +58,20 @@ export async function getPatientAppointments(
         doctors (
           user_profiles (
             full_name,
-            avatar_url
+            avatar_url,
+            phone
           ),
           specialization,
-          clinic_address
+          clinic_address,
+          consultation_fee,
+          doctor_schedules (
+            id,
+            day_of_week,
+            start_time,
+            end_time,
+            slot_duration_minutes,
+            is_active
+          )
         )
       `)
       .eq("patient_id", targetPatientId);
