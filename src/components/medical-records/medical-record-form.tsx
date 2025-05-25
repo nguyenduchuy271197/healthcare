@@ -59,6 +59,23 @@ export function MedicalRecordForm({
 
   const { toast } = useToast();
 
+  // Check if appointment is completed
+  const isAppointmentCompleted = appointment.status === "completed";
+  const isFormDisabled = !isAppointmentCompleted || isSubmitting;
+
+  function getStatusLabel(status: string | null) {
+    const statusLabels = {
+      pending: "Chờ xác nhận",
+      confirmed: "Đã xác nhận",
+      completed: "Hoàn thành",
+      cancelled: "Đã hủy",
+      rejected: "Từ chối",
+    };
+    return (
+      statusLabels[status as keyof typeof statusLabels] || "Không xác định"
+    );
+  }
+
   function handleInputChange(field: string, value: string | boolean) {
     setFormData((prev) => ({
       ...prev,
@@ -67,6 +84,17 @@ export function MedicalRecordForm({
   }
 
   async function handleSubmit() {
+    // Check if appointment is completed
+    if (appointment.status !== "completed") {
+      toast({
+        title: "Không thể tạo hồ sơ khám bệnh",
+        description:
+          "Chỉ có thể tạo hồ sơ khám bệnh cho các cuộc hẹn đã hoàn thành.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!formData.diagnosis.trim()) {
       toast({
         title: "Thiếu thông tin",
@@ -145,6 +173,25 @@ export function MedicalRecordForm({
         </DialogHeader>
 
         <div className="space-y-6 overflow-y-auto flex-1 pr-2">
+          {/* Status Warning */}
+          {!isAppointmentCompleted && (
+            <Card className="border-destructive bg-destructive/10">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2 text-destructive">
+                  <FileText className="h-4 w-4" />
+                  <span className="font-medium">
+                    Không thể tạo hồ sơ khám bệnh
+                  </span>
+                </div>
+                <p className="text-sm text-destructive/80 mt-1">
+                  Hồ sơ khám bệnh chỉ có thể được tạo sau khi cuộc hẹn đã hoàn
+                  thành. Trạng thái hiện tại:{" "}
+                  <strong>{getStatusLabel(appointment.status)}</strong>
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Appointment Info */}
           <Card className="bg-muted/50">
             <CardContent className="pt-4">
@@ -182,7 +229,7 @@ export function MedicalRecordForm({
               value={formData.symptoms}
               onChange={(e) => handleInputChange("symptoms", e.target.value)}
               rows={3}
-              disabled={isSubmitting}
+              disabled={isFormDisabled}
             />
           </div>
 
@@ -195,7 +242,7 @@ export function MedicalRecordForm({
               value={formData.diagnosis}
               onChange={(e) => handleInputChange("diagnosis", e.target.value)}
               rows={3}
-              disabled={isSubmitting}
+              disabled={isFormDisabled}
               required
             />
           </div>
@@ -211,7 +258,7 @@ export function MedicalRecordForm({
                 handleInputChange("treatmentPlan", e.target.value)
               }
               rows={4}
-              disabled={isSubmitting}
+              disabled={isFormDisabled}
             />
           </div>
 
@@ -224,7 +271,7 @@ export function MedicalRecordForm({
                 onCheckedChange={(checked) =>
                   handleInputChange("followUpRequired", checked as boolean)
                 }
-                disabled={isSubmitting}
+                disabled={isFormDisabled}
               />
               <Label htmlFor="followUp">Cần tái khám</Label>
             </div>
@@ -240,7 +287,7 @@ export function MedicalRecordForm({
                         "w-full justify-start text-left font-normal",
                         !followUpDate && "text-muted-foreground"
                       )}
-                      disabled={isSubmitting}
+                      disabled={isFormDisabled}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {followUpDate
@@ -271,7 +318,7 @@ export function MedicalRecordForm({
               value={formData.notes}
               onChange={(e) => handleInputChange("notes", e.target.value)}
               rows={3}
-              disabled={isSubmitting}
+              disabled={isFormDisabled}
             />
           </div>
         </div>
@@ -282,14 +329,16 @@ export function MedicalRecordForm({
             onClick={handleClose}
             disabled={isSubmitting}
           >
-            Hủy
+            {!isAppointmentCompleted ? "Đóng" : "Hủy"}
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isSubmitting || !formData.diagnosis.trim()}
+            disabled={isFormDisabled || !formData.diagnosis.trim()}
           >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Lưu hồ sơ khám bệnh
+            {!isAppointmentCompleted
+              ? "Không thể tạo hồ sơ"
+              : "Lưu hồ sơ khám bệnh"}
           </Button>
         </DialogFooter>
       </DialogContent>

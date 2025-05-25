@@ -334,42 +334,39 @@ export function DoctorAppointmentList({
                             )}
 
                             {appointment.status === "confirmed" && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  onClick={() =>
-                                    handleCreateMedicalRecord(appointment)
-                                  }
-                                  disabled={hasCompletedRecord}
-                                >
-                                  <FileText className="h-4 w-4" />
-                                  {hasCompletedRecord
-                                    ? "Đã khám"
-                                    : "Ghi chú khám"}
-                                </Button>
-
-                                {!hasCompletedRecord && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() =>
-                                      handleCompleteAppointment(appointment.id)
-                                    }
-                                    disabled={
-                                      actionLoading ===
-                                      `complete-${appointment.id}`
-                                    }
-                                  >
-                                    {actionLoading ===
-                                    `complete-${appointment.id}` ? (
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      <CheckCircle className="h-4 w-4" />
-                                    )}
-                                    Hoàn thành
-                                  </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  handleCompleteAppointment(appointment.id)
+                                }
+                                disabled={
+                                  actionLoading === `complete-${appointment.id}`
+                                }
+                              >
+                                {actionLoading ===
+                                `complete-${appointment.id}` ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <CheckCircle className="h-4 w-4" />
                                 )}
-                              </>
+                                Hoàn thành
+                              </Button>
+                            )}
+
+                            {appointment.status === "completed" && (
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  handleCreateMedicalRecord(appointment)
+                                }
+                                disabled={hasCompletedRecord}
+                              >
+                                <FileText className="h-4 w-4" />
+                                {hasCompletedRecord
+                                  ? "Đã khám"
+                                  : "Ghi chú khám"}
+                              </Button>
                             )}
 
                             {hasCompletedRecord &&
