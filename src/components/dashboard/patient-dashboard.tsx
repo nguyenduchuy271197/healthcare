@@ -19,8 +19,8 @@ import {
   CreditCard,
   Star,
 } from "lucide-react";
-import { Profile, Appointment } from "@/types/custom.types";
-import { getPatientAppointments } from "@/actions";
+import { Profile, Appointment, Patient } from "@/types/custom.types";
+import { getPatientAppointments, getPatientProfile } from "@/actions";
 
 interface PatientDashboardProps {
   user: Profile;
@@ -30,7 +30,9 @@ export function PatientDashboard({ user }: PatientDashboardProps) {
   const [upcomingAppointments, setUpcomingAppointments] = useState<
     Appointment[]
   >([]);
+  const [patientData, setPatientData] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingPatient, setIsLoadingPatient] = useState(true);
   console.log(user);
 
   useEffect(() => {
@@ -53,7 +55,21 @@ export function PatientDashboard({ user }: PatientDashboardProps) {
       }
     }
 
+    async function loadPatientData() {
+      try {
+        const result = await getPatientProfile();
+        if (result.success && result.data) {
+          setPatientData(result.data);
+        }
+      } catch (error) {
+        console.error("Error loading patient data:", error);
+      } finally {
+        setIsLoadingPatient(false);
+      }
+    }
+
     loadAppointments();
+    loadPatientData();
   }, []);
 
   function getStatusBadge(status: string) {
@@ -118,7 +134,7 @@ export function PatientDashboard({ user }: PatientDashboardProps) {
           <CardContent>
             <Link href="/medical-records">
               <Button variant="outline" className="w-full">
-                Xem hồ sơ
+                Quản lý hồ sơ
               </Button>
             </Link>
           </CardContent>
@@ -229,25 +245,54 @@ export function PatientDashboard({ user }: PatientDashboardProps) {
             <CardDescription>Tóm tắt thông tin y tế cá nhân</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Nhóm máu:</span>
-                <span className="text-sm font-medium">Chưa cập nhật</span>
+            {isLoadingPatient ? (
+              <div className="space-y-2">
+                <div className="h-4 bg-muted rounded animate-pulse" />
+                <div className="h-4 bg-muted rounded animate-pulse" />
+                <div className="h-4 bg-muted rounded animate-pulse" />
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Dị ứng:</span>
-                <span className="text-sm font-medium">Chưa có</span>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Nhóm máu:
+                  </span>
+                  <span className="text-sm font-medium">
+                    {patientData?.blood_type || "Chưa cập nhật"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Dị ứng:</span>
+                  <span className="text-sm font-medium">
+                    {patientData?.allergies && patientData.allergies.length > 0
+                      ? `${patientData.allergies.length} loại`
+                      : "Chưa có"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Bệnh mãn tính:
+                  </span>
+                  <span className="text-sm font-medium">
+                    {patientData?.chronic_conditions &&
+                    patientData.chronic_conditions.length > 0
+                      ? `${patientData.chronic_conditions.length} bệnh`
+                      : "Không"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Bảo hiểm:
+                  </span>
+                  <span className="text-sm font-medium">
+                    {patientData?.insurance_provider || "Chưa cập nhật"}
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Bệnh mãn tính:
-                </span>
-                <span className="text-sm font-medium">Không</span>
-              </div>
-            </div>
-            <Link href="/profile">
+            )}
+            <Link href="/medical-records">
               <Button variant="outline" className="w-full mt-4">
-                Cập nhật thông tin
+                Cập nhật hồ sơ y tế
               </Button>
             </Link>
           </CardContent>

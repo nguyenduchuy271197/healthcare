@@ -48,6 +48,12 @@ export async function Header() {
                 >
                   Lịch hẹn
                 </Link>
+                <Link
+                  href="/medical-records"
+                  className="transition-colors hover:text-foreground/80 text-foreground/60"
+                >
+                  Hồ sơ Y tế
+                </Link>
               </>
             )}
             {userProfile?.role === "doctor" && (
