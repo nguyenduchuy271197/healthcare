@@ -1,8 +1,7 @@
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUserProfile } from "@/actions";
-import { PatientDashboard } from "@/components/dashboard/patient-dashboard";
 import { DoctorDashboard } from "@/components/dashboard/doctor-dashboard";
+import { PatientDashboard } from "@/components/dashboard/patient-dashboard";
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -11,34 +10,29 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/auth/login");
+    return null;
   }
 
   const profileResult = await getUserProfile();
-
   if (!profileResult.success || !profileResult.data) {
-    redirect("/auth/login");
+    return null;
   }
 
   const userProfile = profileResult.data;
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">
-          Chào mừng, {userProfile.full_name}!
-        </h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">
-          {userProfile.role === "patient"
-            ? "Quản lý lịch hẹn và theo dõi sức khỏe của bạn"
-            : "Quản lý bệnh nhân và lịch làm việc của bạn"}
+          Chào mừng trở lại, {userProfile.full_name}
         </p>
       </div>
 
-      {userProfile.role === "patient" ? (
-        <PatientDashboard />
-      ) : (
+      {userProfile.role === "doctor" ? (
         <DoctorDashboard />
+      ) : (
+        <PatientDashboard />
       )}
     </div>
   );
