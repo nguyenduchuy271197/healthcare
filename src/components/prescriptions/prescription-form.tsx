@@ -41,7 +41,7 @@ import { MedicalRecord } from "@/types/custom.types";
 
 interface PrescriptionFormProps {
   medicalRecord: MedicalRecord & {
-    patients: {
+    patients?: {
       user_profiles: {
         full_name: string;
       };
@@ -240,7 +240,7 @@ export function PrescriptionForm({
           </DialogTitle>
           <DialogDescription>
             Tạo đơn thuốc cho bệnh nhân{" "}
-            {medicalRecord.patients.user_profiles.full_name}
+            {medicalRecord.patients?.user_profiles?.full_name || "N/A"}
           </DialogDescription>
         </DialogHeader>
 
@@ -251,7 +251,7 @@ export function PrescriptionForm({
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Bệnh nhân:</span>{" "}
-                  {medicalRecord.patients.user_profiles.full_name}
+                  {medicalRecord.patients?.user_profiles?.full_name || "N/A"}
                 </div>
                 <div>
                   <span className="text-muted-foreground">Chẩn đoán:</span>{" "}

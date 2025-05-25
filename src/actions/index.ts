@@ -30,6 +30,7 @@ export { getAvailableSlots } from "./appointments/get-available-slots";
 export { createAppointment } from "./appointments/create-appointment";
 export { getPatientAppointments } from "./appointments/get-patient-appointments";
 export { getDoctorAppointments } from "./appointments/get-doctor-appointments";
+export { getDoctorAppointmentsDetailed } from "./appointments/get-doctor-appointments-detailed";
 export { cancelAppointment } from "./appointments/cancel-appointment";
 export { updateAppointment } from "./appointments/update-appointment";
 export { updateAppointmentStatus } from "./appointments/update-status";

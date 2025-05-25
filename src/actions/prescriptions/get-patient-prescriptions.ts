@@ -1,23 +1,12 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { Prescription, PrescriptionStatus } from "@/types/custom.types";
+import { PrescriptionStatus, PrescriptionWithDoctorAndItems } from "@/types/custom.types";
 
 interface GetPatientPrescriptionsResult {
   success: boolean;
   error?: string;
-  data?: (Prescription & {
-    doctors: {
-      user_profiles: {
-        full_name: string;
-      };
-      specialization?: string | null;
-    };
-    medical_records: {
-      diagnosis: string;
-      created_at: string | null;
-    };
-  })[];
+  data?: PrescriptionWithDoctorAndItems[];
 }
 
 export async function getPatientPrescriptions(
@@ -56,6 +45,16 @@ export async function getPatientPrescriptions(
         medical_records (
           diagnosis,
           created_at
+        ),
+        prescription_items (
+          id,
+          medication_name,
+          dosage,
+          frequency,
+          duration,
+          quantity,
+          unit_price,
+          instructions
         )
       `)
       .eq("patient_id", targetPatientId);
@@ -77,7 +76,7 @@ export async function getPatientPrescriptions(
 
     return {
       success: true,
-      data,
+      data: data as PrescriptionWithDoctorAndItems[],
     };
   } catch (error) {
     console.error("Get patient prescriptions error:", error);

@@ -81,12 +81,60 @@ export type PrescriptionWithItems = Prescription & {
   prescription_items: Array<PrescriptionItem>;
 };
 
+// Extended prescription type for patient prescriptions list
+export type PrescriptionWithDoctorAndItems = Prescription & {
+  doctors: {
+    user_profiles: {
+      full_name: string;
+    };
+    specialization?: string | null;
+  };
+  medical_records: {
+    diagnosis: string;
+    created_at: string | null;
+  };
+  prescription_items: Array<PrescriptionItem>;
+};
+
+// Extended prescription type for prescription view
+export type PrescriptionViewData = Prescription & {
+  patients: {
+    user_profiles: {
+      full_name: string;
+      phone?: string;
+      date_of_birth?: string;
+    };
+  };
+  doctors: {
+    user_profiles: {
+      full_name: string;
+    };
+    clinic_address?: string;
+    license_number?: string;
+    specialization?: string | null;
+  };
+  medical_records: {
+    diagnosis: string;
+    symptoms?: string;
+  };
+  prescription_items: Array<PrescriptionItem>;
+};
+
 export type AppointmentWithPatient = Appointment & {
   patients: {
     user_profiles: {
       full_name: string;
       phone?: string;
+      date_of_birth?: string;
     };
+  };
+  doctors?: {
+    user_profiles: {
+      full_name: string;
+    };
+    clinic_address?: string;
+    license_number?: string;
+    specialization?: string;
   };
   medical_records?: Array<MedicalRecord & {
     patients: {
@@ -94,6 +142,16 @@ export type AppointmentWithPatient = Appointment & {
         full_name: string;
       };
     };
+    prescriptions?: Array<Prescription & {
+      prescription_items: Array<PrescriptionItem>;
+    }>;
+  }>;
+  payments?: Array<{
+    id: number;
+    amount: number;
+    status: string;
+    invoice_url?: string;
+    created_at: string;
   }>;
 };
 
@@ -103,4 +161,29 @@ export type MedicalRecordForPrescription = MedicalRecord & {
       full_name: string;
     };
   };
+};
+
+// Extended appointment type for invoice view
+export type AppointmentForInvoice = Appointment & {
+  patients: {
+    user_profiles: {
+      full_name: string;
+      phone?: string;
+      date_of_birth?: string;
+    };
+  };
+  doctors: {
+    user_profiles: {
+      full_name: string;
+    };
+    clinic_address?: string;
+    license_number?: string;
+  };
+  payments?: Array<{
+    id: number;
+    amount: number;
+    status: string;
+    invoice_url?: string;
+    created_at: string;
+  }>;
 };

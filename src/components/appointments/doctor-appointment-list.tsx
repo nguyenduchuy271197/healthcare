@@ -29,22 +29,30 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
+  Receipt,
+  Eye,
 } from "lucide-react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import {
-  getDoctorAppointments,
+  getDoctorAppointmentsDetailed,
   updateAppointmentStatus,
   completeAppointment,
+  generateInvoice,
 } from "@/actions";
 import {
   AppointmentStatus,
   MedicalRecord,
   AppointmentWithPatient,
   MedicalRecordForPrescription,
+  PrescriptionWithItems,
+  PrescriptionViewData,
+  AppointmentForInvoice,
 } from "@/types/custom.types";
 import { MedicalRecordForm } from "@/components/medical-records/medical-record-form";
 import { PrescriptionForm } from "@/components/prescriptions/prescription-form";
+import { InvoiceView } from "@/components/invoices/invoice-view";
+import { PrescriptionView } from "@/components/prescriptions/prescription-view";
 
 interface DoctorAppointmentListProps {
   doctorId: string;
@@ -62,15 +70,19 @@ export function DoctorAppointmentList({
     useState<AppointmentWithPatient | null>(null);
   const [selectedMedicalRecord, setSelectedMedicalRecord] =
     useState<MedicalRecordForPrescription | null>(null);
+  const [selectedPrescription, setSelectedPrescription] =
+    useState<PrescriptionViewData | null>(null);
   const [showMedicalRecordForm, setShowMedicalRecordForm] = useState(false);
   const [showPrescriptionForm, setShowPrescriptionForm] = useState(false);
+  const [showInvoiceView, setShowInvoiceView] = useState(false);
+  const [showPrescriptionView, setShowPrescriptionView] = useState(false);
 
   const { toast } = useToast();
 
   const loadAppointments = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getDoctorAppointments(doctorId);
+      const result = await getDoctorAppointmentsDetailed(doctorId);
       if (result.success && result.data) {
         setAppointments(result.data as AppointmentWithPatient[]);
       } else {
@@ -163,10 +175,89 @@ export function DoctorAppointmentList({
   }
 
   function handleCreatePrescription(
-    medicalRecord: MedicalRecordForPrescription
+    medicalRecord: MedicalRecord,
+    appointment: AppointmentWithPatient
   ) {
-    setSelectedMedicalRecord(medicalRecord);
+    // Create a medical record with patient information for the prescription form
+    const medicalRecordWithPatient: MedicalRecordForPrescription = {
+      ...medicalRecord,
+      patients: {
+        user_profiles: {
+          full_name: appointment.patients.user_profiles.full_name,
+        },
+      },
+    };
+
+    setSelectedMedicalRecord(medicalRecordWithPatient);
     setShowPrescriptionForm(true);
+  }
+
+  async function handleGenerateInvoice(appointmentId: number) {
+    setActionLoading(`invoice-${appointmentId}`);
+    try {
+      const result = await generateInvoice(appointmentId);
+      if (result.success) {
+        toast({
+          title: "Tạo hóa đơn thành công",
+          description: "Hóa đơn đã được tạo và gửi cho bệnh nhân.",
+        });
+        loadAppointments();
+      } else {
+        toast({
+          title: "Lỗi tạo hóa đơn",
+          description: result.error || "Không thể tạo hóa đơn.",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Lỗi hệ thống",
+        description: "Có lỗi xảy ra khi tạo hóa đơn.",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  function handleViewInvoice(appointment: AppointmentWithPatient) {
+    setSelectedAppointment(appointment);
+    setShowInvoiceView(true);
+  }
+
+  function handleViewPrescription(
+    prescription: PrescriptionWithItems,
+    appointment: AppointmentWithPatient
+  ) {
+    // Transform the prescription data to match PrescriptionViewData type
+    const prescriptionViewData: PrescriptionViewData = {
+      ...prescription,
+      patients: {
+        user_profiles: {
+          full_name: appointment.patients.user_profiles.full_name,
+          phone: appointment.patients.user_profiles.phone,
+          date_of_birth: appointment.patients.user_profiles.date_of_birth,
+        },
+      },
+      doctors: {
+        user_profiles: {
+          full_name: appointment.doctors?.user_profiles.full_name || "N/A",
+        },
+        clinic_address: appointment.doctors?.clinic_address,
+        license_number: appointment.doctors?.license_number,
+        specialization:
+          appointment.doctors?.specialization === null
+            ? undefined
+            : appointment.doctors?.specialization,
+      },
+      medical_records: {
+        diagnosis: appointment.medical_records?.[0]?.diagnosis || "N/A",
+        symptoms: appointment.medical_records?.[0]?.symptoms || undefined,
+      },
+    };
+
+    setSelectedPrescription(prescriptionViewData);
+    setShowPrescriptionView(true);
   }
 
   function getStatusBadge(status: AppointmentStatus) {
@@ -371,18 +462,88 @@ export function DoctorAppointmentList({
 
                             {hasCompletedRecord &&
                               appointment.medical_records && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() =>
-                                    handleCreatePrescription(
-                                      appointment.medical_records![0] as MedicalRecordForPrescription
-                                    )
-                                  }
-                                >
-                                  <Pill className="h-4 w-4" />
-                                  Kê đơn thuốc
-                                </Button>
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() =>
+                                      handleCreatePrescription(
+                                        appointment.medical_records![0] as MedicalRecord,
+                                        appointment
+                                      )
+                                    }
+                                  >
+                                    <Pill className="h-4 w-4" />
+                                    Kê đơn thuốc
+                                  </Button>
+
+                                  {/* Generate Invoice Button */}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() =>
+                                      handleGenerateInvoice(appointment.id)
+                                    }
+                                    disabled={
+                                      actionLoading ===
+                                        `invoice-${appointment.id}` ||
+                                      !!(
+                                        appointment.payments &&
+                                        appointment.payments.length > 0 &&
+                                        appointment.payments[0].invoice_url
+                                      )
+                                    }
+                                  >
+                                    {actionLoading ===
+                                    `invoice-${appointment.id}` ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Receipt className="h-4 w-4" />
+                                    )}
+                                    {appointment.payments &&
+                                    appointment.payments.length > 0 &&
+                                    appointment.payments[0].invoice_url
+                                      ? "Đã tạo HĐ"
+                                      : "Tạo hóa đơn"}
+                                  </Button>
+
+                                  {/* View Invoice Button */}
+                                  {appointment.payments &&
+                                    appointment.payments.length > 0 &&
+                                    appointment.payments[0].invoice_url && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() =>
+                                          handleViewInvoice(appointment)
+                                        }
+                                      >
+                                        <Eye className="h-4 w-4" />
+                                        Xem HĐ
+                                      </Button>
+                                    )}
+
+                                  {/* View Prescriptions */}
+                                  {appointment.medical_records[0]
+                                    .prescriptions &&
+                                    appointment.medical_records[0].prescriptions
+                                      .length > 0 && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() =>
+                                          handleViewPrescription(
+                                            appointment.medical_records![0]
+                                              .prescriptions![0] as PrescriptionWithItems,
+                                            appointment
+                                          )
+                                        }
+                                      >
+                                        <Eye className="h-4 w-4" />
+                                        Xem đơn thuốc
+                                      </Button>
+                                    )}
+                                </>
                               )}
                           </div>
                         </TableCell>
@@ -414,22 +575,38 @@ export function DoctorAppointmentList({
       {/* Prescription Form */}
       {selectedMedicalRecord && (
         <PrescriptionForm
-          medicalRecord={
-            selectedMedicalRecord as MedicalRecord & {
-              patients: {
-                user_profiles: {
-                  full_name: string;
-                };
-              };
-            }
-          }
+          medicalRecord={selectedMedicalRecord}
           isOpen={showPrescriptionForm}
           onClose={() => {
             setShowPrescriptionForm(false);
             setSelectedMedicalRecord(null);
           }}
           onSuccess={() => {
-            // Optionally reload data or show success message
+            loadAppointments();
+          }}
+        />
+      )}
+
+      {/* Invoice View */}
+      {selectedAppointment && selectedAppointment.doctors && (
+        <InvoiceView
+          appointment={selectedAppointment as unknown as AppointmentForInvoice}
+          isOpen={showInvoiceView}
+          onClose={() => {
+            setShowInvoiceView(false);
+            setSelectedAppointment(null);
+          }}
+        />
+      )}
+
+      {/* Prescription View */}
+      {selectedPrescription && (
+        <PrescriptionView
+          prescription={selectedPrescription}
+          isOpen={showPrescriptionView}
+          onClose={() => {
+            setShowPrescriptionView(false);
+            setSelectedPrescription(null);
           }}
         />
       )}
