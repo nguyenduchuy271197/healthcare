@@ -25,17 +25,15 @@ export default async function ManageAppointmentsPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Quản lý lịch hẹn</h1>
-          <p className="text-muted-foreground">
-            Xem và quản lý các lịch hẹn của bệnh nhân
-          </p>
-        </div>
-
-        <DoctorAppointmentList doctorId={user.id} />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Quản lý lịch hẹn</h1>
+        <p className="text-muted-foreground">
+          Xem và quản lý các lịch hẹn của bệnh nhân
+        </p>
       </div>
+
+      <DoctorAppointmentList doctorId={user.id} />
     </div>
   );
 }
