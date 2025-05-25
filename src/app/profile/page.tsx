@@ -3,8 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getUserProfile } from "@/actions";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { DoctorProfileForm } from "@/components/doctors/doctor-profile-form";
+import { DoctorScheduleManagement } from "@/components/doctors/doctor-schedule-management";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Stethoscope } from "lucide-react";
+import { User, Stethoscope, Calendar } from "lucide-react";
 
 export default async function ProfilePage() {
   const supabase = createClient();
@@ -35,7 +36,7 @@ export default async function ProfilePage() {
 
       {userProfile.role === "doctor" ? (
         <Tabs defaultValue="personal" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="personal" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               Thông tin cá nhân
@@ -47,6 +48,10 @@ export default async function ProfilePage() {
               <Stethoscope className="h-4 w-4" />
               Hồ sơ chuyên môn
             </TabsTrigger>
+            <TabsTrigger value="schedule" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Lịch làm việc
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personal">
@@ -55,6 +60,10 @@ export default async function ProfilePage() {
 
           <TabsContent value="professional">
             <DoctorProfileForm />
+          </TabsContent>
+
+          <TabsContent value="schedule">
+            <DoctorScheduleManagement />
           </TabsContent>
         </Tabs>
       ) : (

@@ -129,8 +129,8 @@ export function DoctorProfileForm({
             clinic_address: result.data.clinic_address || "",
           });
         }
-      } catch (error) {
-        console.error("Error loading doctor profile:", error);
+      } catch {
+        console.error("Error loading doctor profile");
       } finally {
         setIsLoadingProfile(false);
       }

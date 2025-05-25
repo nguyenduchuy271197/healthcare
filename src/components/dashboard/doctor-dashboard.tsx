@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { Appointment } from "@/types/custom.types";
 import { getDoctorAppointments } from "@/actions";
-import { DoctorProfileSummary } from "@/components/doctors/doctor-profile-summary";
+import { DoctorScheduleSummary } from "@/components/doctors/doctor-schedule-summary";
 
 export function DoctorDashboard() {
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
@@ -284,7 +284,7 @@ export function DoctorDashboard() {
 
       {/* Recent Activity */}
       <div className="grid gap-4 md:grid-cols-2">
-        <DoctorProfileSummary />
+        <DoctorScheduleSummary />
 
         <Card>
           <CardHeader>

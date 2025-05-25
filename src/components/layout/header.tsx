@@ -72,7 +72,7 @@ export async function Header() {
                     Bệnh nhân
                   </Link>
                   <Link
-                    href="/doctor/schedule"
+                    href="/schedule"
                     className="transition-colors hover:text-foreground/80 text-foreground/60"
                   >
                     Lịch làm việc
