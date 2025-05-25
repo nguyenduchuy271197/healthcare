@@ -95,90 +95,77 @@ export function Sidebar({ userProfile, className }: SidebarProps) {
     <TooltipProvider>
       <div
         className={cn(
-          "pb-12 transition-all duration-300",
+          "transition-all duration-300 flex flex-col h-full",
           collapsed ? "w-16" : "w-64",
           className
         )}
       >
-        <div className="space-y-4 py-4">
-          <div className="px-3 py-2">
-            <div className="flex items-center justify-between mb-2 px-2">
-              {!collapsed && (
-                <div className="flex items-center">
-                  <Stethoscope className="h-6 w-6 mr-2" />
-                  <h2 className="text-lg font-semibold tracking-tight">
-                    HealthCare
-                  </h2>
-                </div>
-              )}
-              {collapsed && (
-                <div className="flex items-center justify-center w-full">
-                  <Stethoscope className="h-6 w-6" />
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setCollapsed(!collapsed)}
-                className="h-8 w-8"
-              >
-                {collapsed ? (
-                  <ChevronRight className="h-4 w-4" />
-                ) : (
-                  <ChevronLeft className="h-4 w-4" />
-                )}
-              </Button>
+        <div className="flex items-center justify-between px-4 border-b h-14">
+          {!collapsed && (
+            <div className="flex items-center">
+              <Stethoscope className="h-6 w-6 mr-2" />
+              <h2 className="text-lg font-semibold tracking-tight">
+                HealthCare
+              </h2>
             </div>
+          )}
 
-            <div className="space-y-1">
-              <ScrollArea className="h-[calc(100vh-8rem)]">
-                <div className="space-y-2 p-2">
-                  {navItems.map((item) => {
-                    const isActive =
-                      pathname === item.href ||
-                      (item.href !== "/dashboard" &&
-                        pathname.startsWith(item.href));
-
-                    const buttonContent = (
-                      <Button
-                        variant={isActive ? "secondary" : "ghost"}
-                        className={cn(
-                          "w-full h-10",
-                          collapsed ? "justify-center px-2" : "justify-start",
-                          isActive && "bg-secondary font-medium"
-                        )}
-                      >
-                        <item.icon
-                          className={cn("h-4 w-4", !collapsed && "mr-2")}
-                        />
-                        {!collapsed && item.title}
-                      </Button>
-                    );
-
-                    if (collapsed) {
-                      return (
-                        <Tooltip key={item.href}>
-                          <TooltipTrigger asChild>
-                            <Link href={item.href}>{buttonContent}</Link>
-                          </TooltipTrigger>
-                          <TooltipContent side="right">
-                            <p>{item.title}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      );
-                    }
-
-                    return (
-                      <Link key={item.href} href={item.href}>
-                        {buttonContent}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
-            </div>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCollapsed(!collapsed)}
+            className="h-8 w-8 flex-shrink-0 hidden md:flex"
+          >
+            {collapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </Button>
         </div>
+
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-2">
+            {navItems.map((item) => {
+              const isActive =
+                pathname === item.href ||
+                (item.href !== "/dashboard" && pathname.startsWith(item.href));
+
+              const buttonContent = (
+                <Button
+                  variant={isActive ? "secondary" : "ghost"}
+                  className={cn(
+                    "w-full h-10 mb-1",
+                    collapsed ? "justify-center px-2 w-10" : "justify-start",
+                    isActive && "bg-secondary font-medium"
+                  )}
+                >
+                  <item.icon className={cn("h-4 w-4", !collapsed && "mr-2")} />
+                  {!collapsed && item.title}
+                </Button>
+              );
+
+              if (collapsed) {
+                return (
+                  <Tooltip key={item.href}>
+                    <TooltipTrigger asChild>
+                      <Link href={item.href}>{buttonContent}</Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>{item.title}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              }
+
+              return (
+                <Link key={item.href} href={item.href}>
+                  {buttonContent}
+                </Link>
+              );
+            })}
+          </div>
+        </ScrollArea>
       </div>
     </TooltipProvider>
   );
