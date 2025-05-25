@@ -31,6 +31,7 @@ export function PatientDashboard({ user }: PatientDashboardProps) {
     Appointment[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
+  console.log(user);
 
   useEffect(() => {
     async function loadAppointments() {

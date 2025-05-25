@@ -14,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { loginUser } from "@/actions";
 
@@ -23,25 +23,37 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
+  const { toast } = useToast();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
 
     try {
       const result = await loginUser({ email, password });
 
       if (result.success) {
+        toast({
+          title: "Đăng nhập thành công",
+          description: "Chào mừng bạn quay trở lại!",
+        });
         router.push("/dashboard");
         router.refresh();
       } else {
-        setError(result.error || "Đăng nhập thất bại");
+        toast({
+          title: "Đăng nhập thất bại",
+          description:
+            result.error || "Vui lòng kiểm tra lại thông tin đăng nhập.",
+          variant: "destructive",
+        });
       }
-    } catch (error) {
-      setError("Có lỗi xảy ra. Vui lòng thử lại.");
+    } catch {
+      toast({
+        title: "Lỗi hệ thống",
+        description: "Có lỗi xảy ra. Vui lòng thử lại.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -60,12 +72,6 @@ export default function LoginPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input

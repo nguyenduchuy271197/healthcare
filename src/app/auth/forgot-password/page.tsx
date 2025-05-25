@@ -13,36 +13,43 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft, Mail } from "lucide-react";
 import { forgotPassword } from "@/actions";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+  const { toast } = useToast();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
-    setMessage("");
 
     try {
       const result = await forgotPassword({ email });
 
       if (result.success) {
         setIsSuccess(true);
-        setMessage(
-          "Chúng tôi đã gửi link đặt lại mật khẩu đến email của bạn. Vui lòng kiểm tra hộp thư."
-        );
+        toast({
+          title: "Email đã được gửi",
+          description:
+            "Chúng tôi đã gửi link đặt lại mật khẩu đến email của bạn. Vui lòng kiểm tra hộp thư.",
+        });
       } else {
-        setError(result.error || "Có lỗi xảy ra. Vui lòng thử lại.");
+        toast({
+          title: "Gửi email thất bại",
+          description: result.error || "Có lỗi xảy ra. Vui lòng thử lại.",
+          variant: "destructive",
+        });
       }
-    } catch (error) {
-      setError("Có lỗi xảy ra. Vui lòng thử lại.");
+    } catch {
+      toast({
+        title: "Lỗi hệ thống",
+        description: "Có lỗi xảy ra. Vui lòng thử lại.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -64,9 +71,10 @@ export default function ForgotPasswordPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Alert>
-              <AlertDescription>{message}</AlertDescription>
-            </Alert>
+            <p className="text-sm text-muted-foreground text-center">
+              Chúng tôi đã gửi link đặt lại mật khẩu đến email của bạn. Vui lòng
+              kiểm tra hộp thư.
+            </p>
           </CardContent>
           <CardFooter>
             <Link href="/auth/login" className="w-full">
@@ -94,12 +102,6 @@ export default function ForgotPasswordPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input

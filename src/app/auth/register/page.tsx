@@ -14,8 +14,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2, Eye, EyeOff, User, UserCheck } from "lucide-react";
 import { registerUser } from "@/actions";
 import { UserRole } from "@/types/custom.types";
@@ -32,8 +32,8 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
+  const { toast } = useToast();
 
   function handleInputChange(field: string, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -42,17 +42,24 @@ export default function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp");
+      toast({
+        title: "Lỗi xác nhận mật khẩu",
+        description: "Mật khẩu xác nhận không khớp",
+        variant: "destructive",
+      });
       setIsLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
-      setError("Mật khẩu phải có ít nhất 6 ký tự");
+      toast({
+        title: "Mật khẩu không hợp lệ",
+        description: "Mật khẩu phải có ít nhất 6 ký tự",
+        variant: "destructive",
+      });
       setIsLoading(false);
       return;
     }
@@ -67,14 +74,24 @@ export default function RegisterPage() {
       });
 
       if (result.success) {
-        router.push(
-          "/auth/login?message=Đăng ký thành công! Vui lòng đăng nhập."
-        );
+        toast({
+          title: "Đăng ký thành công",
+          description: "Tài khoản đã được tạo. Vui lòng đăng nhập.",
+        });
+        router.push("/auth/login");
       } else {
-        setError(result.error || "Đăng ký thất bại");
+        toast({
+          title: "Đăng ký thất bại",
+          description: result.error || "Có lỗi xảy ra khi tạo tài khoản.",
+          variant: "destructive",
+        });
       }
-    } catch (error) {
-      setError("Có lỗi xảy ra. Vui lòng thử lại.");
+    } catch {
+      toast({
+        title: "Lỗi hệ thống",
+        description: "Có lỗi xảy ra. Vui lòng thử lại.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -93,12 +110,6 @@ export default function RegisterPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
             {/* Role Selection */}
             <div className="space-y-3">
               <Label>Bạn là:</Label>

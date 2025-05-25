@@ -29,6 +29,7 @@ interface DoctorDashboardProps {
 export function DoctorDashboard({ user }: DoctorDashboardProps) {
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  console.log(user);
 
   useEffect(() => {
     async function loadAppointments() {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
@@ -23,9 +22,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2, Upload, User, Stethoscope } from "lucide-react";
 import { Profile } from "@/types/custom.types";
 import { updateUserProfile } from "@/actions";
+import { createClient } from "@/lib/supabase/client";
 
 interface ProfileFormProps {
   user: Profile;
@@ -42,9 +43,11 @@ export function ProfileForm({ user }: ProfileFormProps) {
     sms_notifications: user.sms_notifications ?? false,
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(user.avatar_url || "");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { toast } = useToast();
 
   function handleInputChange(field: string, value: string | boolean) {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -59,23 +62,126 @@ export function ProfileForm({ user }: ProfileFormProps) {
       .slice(0, 2);
   }
 
+  async function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Lỗi tệp",
+        description: "Vui lòng chọn một tệp hình ảnh hợp lệ.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Tệp quá lớn",
+        description: "Kích thước tệp không được vượt quá 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingImage(true);
+
+    try {
+      const supabase = createClient();
+
+      // Generate unique filename
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = fileName; // Just the filename, not including bucket path
+
+      // Upload file to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from("profile-images")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("profile-images").getPublicUrl(filePath);
+
+      // Update user profile with new avatar URL
+      const result = await updateUserProfile({
+        avatar_url: publicUrl,
+      });
+
+      if (result.success) {
+        setAvatarUrl(publicUrl);
+        toast({
+          title: "Cập nhật thành công",
+          description: "Ảnh đại diện đã được cập nhật.",
+        });
+        router.refresh();
+      } else {
+        throw new Error(result.error || "Failed to update profile");
+      }
+    } catch (error) {
+      console.error("Image upload error:", error);
+      toast({
+        title: "Lỗi tải ảnh",
+        description: "Có lỗi xảy ra khi tải ảnh lên. Vui lòng thử lại.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingImage(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
-    setMessage("");
 
     try {
-      const result = await updateUserProfile(formData);
+      // Prepare form data with proper null handling for date
+      const submitData = {
+        ...formData,
+        // Convert empty date string to null for PostgreSQL
+        date_of_birth:
+          formData.date_of_birth.trim() === "" ? null : formData.date_of_birth,
+        // Convert empty strings to null for optional fields
+        phone: formData.phone.trim() === "" ? null : formData.phone,
+        address: formData.address.trim() === "" ? null : formData.address,
+        gender: formData.gender === "" ? null : formData.gender,
+      };
+
+      const result = await updateUserProfile(submitData);
 
       if (result.success) {
-        setMessage("Cập nhật thông tin thành công!");
+        toast({
+          title: "Cập nhật thành công",
+          description: "Thông tin cá nhân đã được cập nhật.",
+        });
         router.refresh();
       } else {
-        setError(result.error || "Có lỗi xảy ra khi cập nhật thông tin");
+        toast({
+          title: "Cập nhật thất bại",
+          description: result.error || "Có lỗi xảy ra khi cập nhật thông tin.",
+          variant: "destructive",
+        });
       }
-    } catch (error) {
-      setError("Có lỗi xảy ra. Vui lòng thử lại.");
+    } catch {
+      toast({
+        title: "Lỗi hệ thống",
+        description: "Có lỗi xảy ra. Vui lòng thử lại.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -88,7 +194,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
         <CardHeader>
           <div className="flex items-center space-x-4">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={user.avatar_url || ""} alt={user.full_name} />
+              <AvatarImage src={avatarUrl} alt={user.full_name} />
               <AvatarFallback className="text-lg">
                 {getInitials(user.full_name)}
               </AvatarFallback>
@@ -113,9 +219,25 @@ export function ProfileForm({ user }: ProfileFormProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <Button variant="outline" className="w-full">
-            <Upload className="mr-2 h-4 w-4" />
-            Thay đổi ảnh đại diện
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploadingImage}
+          >
+            {isUploadingImage ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="mr-2 h-4 w-4" />
+            )}
+            {isUploadingImage ? "Đang tải lên..." : "Thay đổi ảnh đại diện"}
           </Button>
         </CardContent>
       </Card>
@@ -130,18 +252,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {message && (
-              <Alert>
-                <AlertDescription>{message}</AlertDescription>
-              </Alert>
-            )}
-
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="full_name">Họ và tên</Label>

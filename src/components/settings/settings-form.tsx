@@ -11,8 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2, Eye, EyeOff, Shield, Key, Trash2 } from "lucide-react";
 import { Profile } from "@/types/custom.types";
 import { changePassword } from "@/actions";
@@ -33,8 +33,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
     confirm: false,
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const { toast } = useToast();
 
   function handlePasswordChange(field: string, value: string) {
     setPasswordData((prev) => ({ ...prev, [field]: value }));
@@ -50,18 +49,24 @@ export function SettingsForm({ user }: SettingsFormProps) {
   async function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
-    setMessage("");
 
     // Validation
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError("Mật khẩu mới và xác nhận mật khẩu không khớp");
+      toast({
+        title: "Lỗi xác nhận mật khẩu",
+        description: "Mật khẩu mới và xác nhận mật khẩu không khớp",
+        variant: "destructive",
+      });
       setIsLoading(false);
       return;
     }
 
     if (passwordData.newPassword.length < 6) {
-      setError("Mật khẩu mới phải có ít nhất 6 ký tự");
+      toast({
+        title: "Mật khẩu không hợp lệ",
+        description: "Mật khẩu mới phải có ít nhất 6 ký tự",
+        variant: "destructive",
+      });
       setIsLoading(false);
       return;
     }
@@ -73,17 +78,28 @@ export function SettingsForm({ user }: SettingsFormProps) {
       });
 
       if (result.success) {
-        setMessage("Đổi mật khẩu thành công!");
+        toast({
+          title: "Đổi mật khẩu thành công",
+          description: "Mật khẩu của bạn đã được cập nhật.",
+        });
         setPasswordData({
           currentPassword: "",
           newPassword: "",
           confirmPassword: "",
         });
       } else {
-        setError(result.error || "Có lỗi xảy ra khi đổi mật khẩu");
+        toast({
+          title: "Đổi mật khẩu thất bại",
+          description: result.error || "Có lỗi xảy ra khi đổi mật khẩu.",
+          variant: "destructive",
+        });
       }
-    } catch (error) {
-      setError("Có lỗi xảy ra. Vui lòng thử lại.");
+    } catch {
+      toast({
+        title: "Lỗi hệ thống",
+        description: "Có lỗi xảy ra. Vui lòng thử lại.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -150,18 +166,6 @@ export function SettingsForm({ user }: SettingsFormProps) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handlePasswordSubmit} className="space-y-4">
-            {message && (
-              <Alert>
-                <AlertDescription>{message}</AlertDescription>
-              </Alert>
-            )}
-
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
             <div className="space-y-2">
               <Label htmlFor="currentPassword">Mật khẩu hiện tại</Label>
               <div className="relative">
