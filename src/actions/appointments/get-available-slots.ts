@@ -21,8 +21,10 @@ export async function getAvailableSlots(
     const supabase = createClient();
 
     // Parse the date to get day of week (0 = Sunday, 6 = Saturday)
-    const targetDate = new Date(date);
+    const targetDate = new Date(date + 'T00:00:00');
     const dayOfWeek = targetDate.getDay();
+
+
 
     // Get doctor's schedule for the requested day
     const { data: schedules, error: scheduleError } = await supabase
@@ -32,12 +34,12 @@ export async function getAvailableSlots(
       .eq("day_of_week", dayOfWeek)
       .eq("is_active", true);
 
-    if (scheduleError) {
-      return {
-        success: false,
-        error: scheduleError.message,
-      };
-    }
+          if (scheduleError) {
+        return {
+          success: false,
+          error: scheduleError.message,
+        };
+      }
 
     if (!schedules || schedules.length === 0) {
       return {
@@ -54,42 +56,46 @@ export async function getAvailableSlots(
       .eq("appointment_date", date)
       .in("status", ["pending", "confirmed"]);
 
-    if (appointmentError) {
-      return {
-        success: false,
-        error: appointmentError.message,
-      };
-    }
+          if (appointmentError) {
+        return {
+          success: false,
+          error: appointmentError.message,
+        };
+      }
 
     // Generate all possible slots
     const availableSlots: AvailableSlot[] = [];
+    const now = new Date();
+    const today = new Date().toISOString().split('T')[0];
+    const isToday = date === today;
 
     for (const schedule of schedules) {
-      const startTime = new Date(`${date} ${schedule.start_time}`);
-      const endTime = new Date(`${date} ${schedule.end_time}`);
+      // Parse time strings (format: HH:MM:SS)
+      const [startHour, startMinute] = schedule.start_time.split(':').map(Number);
+      const [endHour, endMinute] = schedule.end_time.split(':').map(Number);
+      
       const slotDuration = schedule.slot_duration_minutes || 30;
 
-      let currentTime = new Date(startTime);
+      // Create start and end times for the schedule
+      let currentHour = startHour;
+      let currentMinute = startMinute;
 
-      while (currentTime < endTime) {
-        const timeString = currentTime.toTimeString().slice(0, 5); // HH:MM format
+      while (currentHour < endHour || (currentHour === endHour && currentMinute < endMinute)) {
+        const timeString = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
         
         // Check if this slot is already booked
         const isBooked = appointments?.some(apt => {
-          const aptTime = new Date(`${date} ${apt.appointment_time}`);
-          const aptEndTime = new Date(aptTime.getTime() + (apt.duration_minutes || 30) * 60000);
-          const slotEndTime = new Date(currentTime.getTime() + slotDuration * 60000);
-          
-          return (
-            (currentTime >= aptTime && currentTime < aptEndTime) ||
-            (slotEndTime > aptTime && slotEndTime <= aptEndTime) ||
-            (currentTime <= aptTime && slotEndTime >= aptEndTime)
-          );
+          const aptTime = apt.appointment_time.slice(0, 5); // Get HH:MM from HH:MM:SS
+          return aptTime === timeString;
         });
 
-        // Check if slot is in the past
-        const now = new Date();
-        const isPast = currentTime <= now;
+        // Check if slot is in the past (only for today)
+        let isPast = false;
+        if (isToday) {
+          const slotDateTime = new Date();
+          slotDateTime.setHours(currentHour, currentMinute, 0, 0);
+          isPast = slotDateTime <= now;
+        }
 
         availableSlots.push({
           time: timeString,
@@ -97,7 +103,11 @@ export async function getAvailableSlots(
         });
 
         // Move to next slot
-        currentTime = new Date(currentTime.getTime() + slotDuration * 60000);
+        currentMinute += slotDuration;
+        if (currentMinute >= 60) {
+          currentHour += Math.floor(currentMinute / 60);
+          currentMinute = currentMinute % 60;
+        }
       }
     }
 
