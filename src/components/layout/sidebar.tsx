@@ -136,7 +136,7 @@ export function Sidebar({ userProfile, className }: SidebarProps) {
                   variant={isActive ? "secondary" : "ghost"}
                   className={cn(
                     "w-full h-10 mb-1",
-                    collapsed ? "justify-center px-2 w-10" : "justify-start",
+                    collapsed ? "justify-center px-2" : "justify-start",
                     isActive && "bg-secondary font-medium"
                   )}
                 >
