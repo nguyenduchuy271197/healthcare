@@ -23,6 +23,9 @@ import {
   UserCheck,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
+  Bell,
+  Pill,
 } from "lucide-react";
 import { Profile } from "@/types/custom.types";
 
@@ -58,6 +61,21 @@ export function Sidebar({ userProfile, className }: SidebarProps) {
       href: "/medical-records",
       icon: FileText,
     },
+    {
+      title: "Đơn thuốc",
+      href: "/prescriptions",
+      icon: Pill,
+    },
+    {
+      title: "Thanh toán",
+      href: "/payments",
+      icon: CreditCard,
+    },
+    {
+      title: "Thông báo",
+      href: "/notifications",
+      icon: Bell,
+    },
   ];
 
   const doctorNavItems = [
@@ -77,6 +95,16 @@ export function Sidebar({ userProfile, className }: SidebarProps) {
       icon: Users,
     },
     {
+      title: "Đơn thuốc",
+      href: "/prescriptions",
+      icon: Pill,
+    },
+    {
+      title: "Thanh toán",
+      href: "/payments",
+      icon: CreditCard,
+    },
+    {
       title: "Báo cáo doanh thu",
       href: "/reports/revenue",
       icon: BarChart3,
@@ -85,6 +113,11 @@ export function Sidebar({ userProfile, className }: SidebarProps) {
       title: "Lịch làm việc",
       href: "/schedule",
       icon: Clock,
+    },
+    {
+      title: "Thông báo",
+      href: "/notifications",
+      icon: Bell,
     },
   ];
 
