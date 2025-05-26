@@ -4,7 +4,6 @@ import { getUserProfile, getDoctorDetails, getDoctorReviews } from "@/actions";
 import { DoctorProfile } from "@/components/doctors/doctor-profile";
 import { DoctorSchedule } from "@/components/doctors/doctor-schedule";
 import { DoctorReviews } from "@/components/doctors/doctor-reviews";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface DoctorPageProps {
   params: {
@@ -44,7 +43,8 @@ export default async function DoctorPage({ params }: DoctorPageProps) {
   const reviewsResult = await getDoctorReviews(params.id, { limit: 5 });
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto py-6 space-y-6">
+      {/* Doctor Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold">
           {doctorResult.data.user_profiles.full_name}
@@ -54,22 +54,14 @@ export default async function DoctorPage({ params }: DoctorPageProps) {
         </p>
       </div>
 
-      <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="profile">Thông tin bác sĩ</TabsTrigger>
-          <TabsTrigger value="schedule">Đặt lịch khám</TabsTrigger>
-          <TabsTrigger value="reviews">Đánh giá</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="profile" className="space-y-6">
+      {/* Two Column Layout */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left Column - Doctor Info & Reviews */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Doctor Profile */}
           <DoctorProfile doctor={doctorResult.data} />
-        </TabsContent>
 
-        <TabsContent value="schedule" className="space-y-6">
-          <DoctorSchedule doctor={doctorResult.data} />
-        </TabsContent>
-
-        <TabsContent value="reviews" className="space-y-6">
+          {/* Doctor Reviews */}
           <DoctorReviews
             doctorId={params.id}
             initialReviews={
@@ -80,8 +72,15 @@ export default async function DoctorPage({ params }: DoctorPageProps) {
               reviewsResult.success ? reviewsResult.averageRating || 0 : 0
             }
           />
-        </TabsContent>
-      </Tabs>
+        </div>
+
+        {/* Right Column - Booking */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-6">
+            <DoctorSchedule doctor={doctorResult.data} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

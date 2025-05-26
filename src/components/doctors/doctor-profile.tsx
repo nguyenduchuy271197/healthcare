@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -73,236 +67,164 @@ export function DoctorProfile({ doctor }: DoctorProfileProps) {
     .sort((a, b) => a.day_of_week - b.day_of_week);
 
   return (
-    <div className="grid gap-6 md:grid-cols-3">
-      {/* Main Profile Info */}
-      <div className="md:col-span-2 space-y-6">
-        {/* Basic Information */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-start space-x-4">
-              <Avatar className="h-20 w-20">
-                <AvatarImage
-                  src={doctor.user_profiles.avatar_url || ""}
-                  alt={doctor.user_profiles.full_name}
-                />
-                <AvatarFallback>
-                  <User className="h-10 w-10" />
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <CardTitle className="text-2xl">
-                    {doctor.user_profiles.full_name}
-                  </CardTitle>
-                  {doctor.verified_at && (
-                    <Badge
-                      variant="default"
-                      className="bg-green-100 text-green-800"
-                    >
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Đã xác minh
-                    </Badge>
-                  )}
-                </div>
-                <CardDescription className="text-lg">
-                  {doctor.specialization || "Bác sĩ đa khoa"}
-                </CardDescription>
-                {doctor.qualification && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {doctor.qualification}
-                  </p>
+    <div className="space-y-6">
+      {/* Basic Information */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-start space-x-4">
+            <Avatar className="h-20 w-20">
+              <AvatarImage
+                src={doctor.user_profiles.avatar_url || ""}
+                alt={doctor.user_profiles.full_name}
+              />
+              <AvatarFallback>
+                <User className="h-10 w-10" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <h2 className="text-2xl font-bold">
+                  {doctor.user_profiles.full_name}
+                </h2>
+                {doctor.verified_at && (
+                  <Badge
+                    variant="default"
+                    className="bg-green-100 text-green-800"
+                  >
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Đã xác minh
+                  </Badge>
                 )}
+                <Badge
+                  variant={doctor.is_available ? "default" : "secondary"}
+                  className="text-xs"
+                >
+                  {doctor.is_available ? "Khả dụng" : "Bận"}
+                </Badge>
+              </div>
+              <p className="text-muted-foreground text-lg">
+                {doctor.specialization || "Bác sĩ đa khoa"}
+              </p>
+              {doctor.qualification && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  {doctor.qualification}
+                </p>
+              )}
 
-                {/* Rating */}
-                <div className="flex items-center space-x-2 mt-3">
-                  <div className="flex items-center space-x-1">
-                    {getRatingStars(doctor.average_rating || 0)}
-                  </div>
-                  <span className="text-sm font-medium">
+              {/* Rating and Stats */}
+              <div className="flex items-center gap-6 mt-3">
+                <div className="flex items-center space-x-1">
+                  {getRatingStars(doctor.average_rating || 0)}
+                  <span className="text-sm font-medium ml-1">
                     {doctor.average_rating?.toFixed(1) || "0.0"}
                   </span>
                   <span className="text-sm text-muted-foreground">
                     ({doctor.total_reviews || 0} đánh giá)
                   </span>
                 </div>
+                <div className="flex items-center space-x-1">
+                  <Award className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    {doctor.experience_years || 0} năm kinh nghiệm
+                  </span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">
+                    {doctor.consultation_fee?.toLocaleString("vi-VN")} VNĐ
+                  </span>
+                </div>
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
+          </div>
+
+          {/* Contact Info */}
+          <div className="grid gap-4 md:grid-cols-2 mt-4 pt-4 border-t">
+            {doctor.user_profiles.phone && (
               <div className="flex items-center space-x-2">
-                <Award className="h-4 w-4 text-muted-foreground" />
+                <Phone className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
-                  <strong>Kinh nghiệm:</strong> {doctor.experience_years || 0}{" "}
-                  năm
+                  <strong>Điện thoại:</strong> {doctor.user_profiles.phone}
                 </span>
               </div>
+            )}
 
-              {doctor.license_number && (
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    <strong>Số giấy phép:</strong> {doctor.license_number}
-                  </span>
-                </div>
-              )}
+            {doctor.clinic_address && (
+              <div className="flex items-center space-x-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">
+                  <strong>Địa chỉ:</strong> {doctor.clinic_address}
+                </span>
+              </div>
+            )}
 
-              {doctor.user_profiles.phone && (
-                <div className="flex items-center space-x-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    <strong>Điện thoại:</strong> {doctor.user_profiles.phone}
-                  </span>
-                </div>
-              )}
+            {doctor.license_number && (
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">
+                  <strong>Số giấy phép:</strong> {doctor.license_number}
+                </span>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-              {doctor.clinic_address && (
-                <div className="flex items-center space-x-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    <strong>Địa chỉ:</strong> {doctor.clinic_address}
-                  </span>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Biography */}
-        {doctor.bio && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Giới thiệu</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm leading-relaxed whitespace-pre-line">
-                {doctor.bio}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Working Schedule */}
+      {/* Biography */}
+      {doctor.bio && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Lịch làm việc
-            </CardTitle>
-            <CardDescription>Khung giờ làm việc trong tuần</CardDescription>
+            <CardTitle>Giới thiệu</CardTitle>
           </CardHeader>
           <CardContent>
-            {activeSchedules.length > 0 ? (
-              <div className="space-y-3">
-                {activeSchedules.map((schedule) => (
-                  <div
-                    key={schedule.id}
-                    className="flex items-center justify-between p-3 border rounded-lg"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-20 text-sm font-medium">
-                        {DAYS_OF_WEEK[schedule.day_of_week]}
-                      </div>
-                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        <span>
-                          {formatTime(schedule.start_time)} -{" "}
-                          {formatTime(schedule.end_time)}
-                        </span>
-                      </div>
+            <p className="text-sm leading-relaxed whitespace-pre-line">
+              {doctor.bio}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Working Schedule */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Lịch làm việc
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {activeSchedules.length > 0 ? (
+            <div className="space-y-3">
+              {activeSchedules.map((schedule) => (
+                <div
+                  key={schedule.id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-20 text-sm font-medium">
+                      {DAYS_OF_WEEK[schedule.day_of_week]}
                     </div>
-                    <Badge variant="outline">
-                      {schedule.slot_duration_minutes || 30} phút/ca
-                    </Badge>
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                      <Clock className="h-4 w-4" />
+                      <span>
+                        {formatTime(schedule.start_time)} -{" "}
+                        {formatTime(schedule.end_time)}
+                      </span>
+                    </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Chưa có lịch làm việc được thiết lập
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Sidebar */}
-      <div className="space-y-6">
-        {/* Consultation Fee */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Phí khám bệnh
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary">
-                {doctor.consultation_fee?.toLocaleString("vi-VN")} VNĐ
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                Phí khám cho mỗi lần hẹn
-              </p>
+                  <Badge variant="outline">
+                    {schedule.slot_duration_minutes || 30} phút/ca
+                  </Badge>
+                </div>
+              ))}
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Availability Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Trạng thái</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <Badge
-                variant={doctor.is_available ? "default" : "secondary"}
-                className="text-sm px-4 py-2"
-              >
-                {doctor.is_available ? "Có thể đặt lịch" : "Không khả dụng"}
-              </Badge>
-              <p className="text-xs text-muted-foreground mt-2">
-                {doctor.is_available
-                  ? "Bác sĩ đang nhận lịch hẹn mới"
-                  : "Bác sĩ tạm thời không nhận lịch hẹn"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Stats */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Thống kê</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Kinh nghiệm</span>
-              <span className="text-sm font-medium">
-                {doctor.experience_years || 0} năm
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Đánh giá</span>
-              <span className="text-sm font-medium">
-                {doctor.average_rating?.toFixed(1) || "0.0"}/5.0
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Số đánh giá</span>
-              <span className="text-sm font-medium">
-                {doctor.total_reviews || 0}
-              </span>
-            </div>
-            {doctor.verified_at && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Xác minh</span>
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Chưa có lịch làm việc được thiết lập
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

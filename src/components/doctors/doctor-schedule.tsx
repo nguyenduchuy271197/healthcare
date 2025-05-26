@@ -2,21 +2,17 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
-import { useToast } from "@/hooks/use-toast";
 import {
-  Calendar as CalendarIcon,
-  Clock,
-  Loader2,
-  AlertCircle,
-} from "lucide-react";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Calendar as CalendarIcon, Loader2, AlertCircle } from "lucide-react";
 import { Doctor } from "@/types/custom.types";
 import { getAvailableSlots } from "@/actions";
 import { AppointmentBookingForm } from "@/components/appointments/appointment-booking-form";
@@ -51,7 +47,7 @@ export function DoctorSchedule({ doctor }: DoctorScheduleProps) {
   const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<string>("");
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
-  const [showBookingDialog, setShowBookingDialog] = useState(false);
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
 
   const { toast } = useToast();
 
@@ -96,16 +92,16 @@ export function DoctorSchedule({ doctor }: DoctorScheduleProps) {
 
   function handleSlotSelect(time: string) {
     setSelectedSlot(time);
-    setShowBookingDialog(true);
+    setShowScheduleDialog(false);
   }
 
   function handleBookingSuccess() {
     // Reload available slots after successful booking
     loadAvailableSlots();
+    setSelectedSlot("");
   }
 
   function handleBookingClose() {
-    setShowBookingDialog(false);
     setSelectedSlot("");
   }
 
@@ -157,83 +153,118 @@ export function DoctorSchedule({ doctor }: DoctorScheduleProps) {
         </Card>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Calendar */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5" />
-              Chọn ngày khám
-            </CardTitle>
-            <CardDescription>
-              Chọn ngày bạn muốn đặt lịch khám bệnh
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => {
-                if (date) {
-                  setSelectedDate(date);
-                }
-              }}
-              disabled={isDateDisabled}
-              className="rounded-md border"
-            />
-          </CardContent>
-        </Card>
+      {/* Consultation Fee & Booking */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarIcon className="h-5 w-5" />
+            Phí khám bệnh
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center space-y-4">
+            <div>
+              <div className="text-3xl font-bold text-primary">
+                {doctor.consultation_fee?.toLocaleString("vi-VN")} VNĐ
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Phí khám cho mỗi lần hẹn
+              </p>
+            </div>
 
-        {/* Available Slots */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Giờ khám có sẵn
-            </CardTitle>
-            <CardDescription>
-              {selectedDate
-                ? formatDate(selectedDate)
-                : "Chọn ngày để xem giờ khám"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!selectedDate ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                Vui lòng chọn ngày để xem các giờ khám có sẵn
-              </p>
-            ) : isLoadingSlots ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span className="ml-2 text-sm">Đang tải...</span>
-              </div>
-            ) : availableSlots.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                Không có giờ khám nào trong ngày này
-              </p>
-            ) : (
-              <div className="grid grid-cols-3 gap-2">
-                {availableSlots.map((slot) => (
-                  <Button
-                    key={slot.time}
-                    variant={slot.available ? "outline" : "secondary"}
-                    size="sm"
-                    disabled={!slot.available || !doctor.is_available}
-                    onClick={() => handleSlotSelect(slot.time)}
-                    className={`text-xs ${
-                      slot.available
-                        ? "hover:bg-primary hover:text-primary-foreground"
-                        : "opacity-50 cursor-not-allowed"
-                    }`}
-                  >
-                    {slot.time}
-                  </Button>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            {/* Booking Button */}
+            <Dialog
+              open={showScheduleDialog}
+              onOpenChange={setShowScheduleDialog}
+            >
+              <DialogTrigger asChild>
+                <Button
+                  disabled={!doctor.is_available}
+                  className="w-full"
+                  size="lg"
+                >
+                  <CalendarIcon className="h-4 w-4 mr-2" />
+                  {doctor.is_available ? "Đặt lịch khám" : "Không khả dụng"}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <CalendarIcon className="h-5 w-5" />
+                    Chọn lịch khám với {doctor.user_profiles.full_name}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-6">
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {/* Calendar */}
+                    <div>
+                      <h4 className="text-sm font-medium mb-3">
+                        Chọn ngày khám
+                      </h4>
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => {
+                          if (date) {
+                            setSelectedDate(date);
+                          }
+                        }}
+                        disabled={isDateDisabled}
+                        className="rounded-md border w-full"
+                      />
+                    </div>
+
+                    {/* Available Slots */}
+                    <div>
+                      <h4 className="text-sm font-medium mb-3">
+                        Giờ khám có sẵn
+                        {selectedDate && (
+                          <span className="text-xs text-muted-foreground block mt-1">
+                            {formatDate(selectedDate)}
+                          </span>
+                        )}
+                      </h4>
+                      {!selectedDate ? (
+                        <p className="text-sm text-muted-foreground text-center py-8">
+                          Vui lòng chọn ngày để xem giờ khám
+                        </p>
+                      ) : isLoadingSlots ? (
+                        <div className="flex items-center justify-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin" />
+                          <span className="ml-2 text-sm">Đang tải...</span>
+                        </div>
+                      ) : availableSlots.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-8">
+                          Không có giờ khám nào trong ngày này
+                        </p>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-2">
+                          {availableSlots.map((slot) => (
+                            <Button
+                              key={slot.time}
+                              variant={slot.available ? "outline" : "secondary"}
+                              size="sm"
+                              disabled={!slot.available || !doctor.is_available}
+                              onClick={() => handleSlotSelect(slot.time)}
+                              className={`text-xs ${
+                                slot.available
+                                  ? "hover:bg-primary hover:text-primary-foreground"
+                                  : "opacity-50 cursor-not-allowed"
+                              }`}
+                            >
+                              {slot.time}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Appointment Booking Form */}
       {selectedDate && selectedSlot && (
@@ -241,7 +272,7 @@ export function DoctorSchedule({ doctor }: DoctorScheduleProps) {
           doctor={doctor}
           selectedDate={selectedDate}
           selectedTime={selectedSlot}
-          isOpen={showBookingDialog}
+          isOpen={!!selectedSlot}
           onClose={handleBookingClose}
           onSuccess={handleBookingSuccess}
         />

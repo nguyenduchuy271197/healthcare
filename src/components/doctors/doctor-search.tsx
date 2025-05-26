@@ -149,7 +149,7 @@ export function DoctorSearch() {
     }, 300); // Debounce search
 
     return () => clearTimeout(timeoutId);
-  }, [filters]);
+  }, [filters, handleSearch]);
 
   function handleFilterChange(
     key: keyof SearchFilters,
