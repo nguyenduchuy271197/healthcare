@@ -96,14 +96,9 @@ export function Sidebar({ userProfile, className }: SidebarProps) {
       icon: Calendar,
     },
     {
-      title: "Bệnh nhân thường xuyên",
-      href: "/patients/regular",
+      title: "Bệnh nhân",
+      href: "/patients",
       icon: Users,
-    },
-    {
-      title: "Đơn thuốc",
-      href: "/prescriptions",
-      icon: Pill,
     },
     {
       title: "Thanh toán",
