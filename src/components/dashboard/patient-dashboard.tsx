@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Search, FileText, CreditCard, Bell } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Calendar, Search, FileText, CreditCard } from "lucide-react";
 import { UpcomingAppointmentsWidget } from "@/components/dashboard/upcoming-appointments-widget";
 import { PaymentSummaryWidget } from "@/components/dashboard/payment-summary-widget";
 

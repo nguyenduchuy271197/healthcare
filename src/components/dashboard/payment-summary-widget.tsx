@@ -72,15 +72,15 @@ export function PaymentSummaryWidget() {
         });
       } else {
         toast({
-          title: "Error",
-          description: result.error || "Failed to load payment summary",
+          title: "Lỗi",
+          description: result.error || "Không thể tải tóm tắt thanh toán",
           variant: "destructive",
         });
       }
     } catch {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: "Lỗi",
+        description: "Đã xảy ra lỗi không mong muốn",
         variant: "destructive",
       });
     } finally {
@@ -109,8 +109,8 @@ export function PaymentSummaryWidget() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Payment Summary</CardTitle>
-          <CardDescription>Your payment overview</CardDescription>
+          <CardTitle>Tóm tắt thanh toán</CardTitle>
+          <CardDescription>Tổng quan thanh toán của bạn</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -143,18 +143,18 @@ export function PaymentSummaryWidget() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Payment Summary</CardTitle>
-          <CardDescription>Your payment overview</CardDescription>
+          <CardTitle>Tóm tắt thanh toán</CardTitle>
+          <CardDescription>Tổng quan thanh toán của bạn</CardDescription>
         </div>
         <Button variant="outline" size="sm" asChild>
-          <Link href="/payments">View All</Link>
+          <Link href="/payments">Xem tất cả</Link>
         </Button>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Total Paid</p>
+            <p className="text-sm text-muted-foreground">Tổng đã thanh toán</p>
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-green-600" />
               <span className="text-lg font-semibold text-green-600">
@@ -162,12 +162,12 @@ export function PaymentSummaryWidget() {
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats.completedCount} completed payments
+              {stats.completedCount} thanh toán hoàn thành
             </p>
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Pending</p>
+            <p className="text-sm text-muted-foreground">Chờ thanh toán</p>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-yellow-600" />
               <span className="text-lg font-semibold text-yellow-600">
@@ -175,7 +175,7 @@ export function PaymentSummaryWidget() {
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats.pendingCount} pending payments
+              {stats.pendingCount} thanh toán chờ xử lý
             </p>
           </div>
         </div>
@@ -183,7 +183,7 @@ export function PaymentSummaryWidget() {
         {/* Recent Payments */}
         {payments.length > 0 && (
           <div className="space-y-3">
-            <h4 className="text-sm font-medium">Recent Payments</h4>
+            <h4 className="text-sm font-medium">Thanh toán gần đây</h4>
             <div className="space-y-3">
               {payments.slice(0, 3).map((payment) => (
                 <div
@@ -226,9 +226,9 @@ export function PaymentSummaryWidget() {
         {payments.length === 0 && (
           <div className="text-center py-6">
             <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No payments yet</p>
+            <p className="text-muted-foreground">Chưa có thanh toán nào</p>
             <p className="text-sm text-muted-foreground">
-              Payments will appear here after booking appointments
+              Thanh toán sẽ hiển thị ở đây sau khi đặt lịch hẹn
             </p>
           </div>
         )}

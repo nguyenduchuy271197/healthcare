@@ -43,7 +43,7 @@ export function Sidebar({ userProfile, className }: SidebarProps) {
 
   const patientNavItems = [
     {
-      title: "Dashboard",
+      title: "Trang chủ",
       href: "/dashboard",
       icon: Home,
     },
@@ -86,7 +86,7 @@ export function Sidebar({ userProfile, className }: SidebarProps) {
 
   const doctorNavItems = [
     {
-      title: "Dashboard",
+      title: "Trang chủ",
       href: "/dashboard",
       icon: Home,
     },

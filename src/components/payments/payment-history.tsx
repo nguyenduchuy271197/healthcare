@@ -45,28 +45,28 @@ function getStatusColor(status: PaymentStatus) {
 function getStatusText(status: PaymentStatus) {
   switch (status) {
     case "completed":
-      return "Completed";
+      return "Hoàn thành";
     case "pending":
-      return "Pending";
+      return "Chờ xử lý";
     case "failed":
-      return "Failed";
+      return "Thất bại";
     case "refunded":
-      return "Refunded";
+      return "Đã hoàn tiền";
     default:
-      return "Unknown";
+      return "Không xác định";
   }
 }
 
 function getPaymentMethodText(method: string) {
   switch (method) {
     case "credit_card":
-      return "Credit Card";
+      return "Thẻ tín dụng";
     case "bank_transfer":
-      return "Bank Transfer";
+      return "Chuyển khoản ngân hàng";
     case "wallet":
-      return "Digital Wallet";
+      return "Ví điện tử";
     case "cash":
-      return "Cash";
+      return "Tiền mặt";
     default:
       return method;
   }
@@ -88,15 +88,15 @@ export function PaymentHistory({ patientId }: PaymentHistoryProps) {
         setTotal(result.total || 0);
       } else {
         toast({
-          title: "Error",
-          description: result.error || "Failed to load payment history",
+          title: "Lỗi",
+          description: result.error || "Không thể tải lịch sử thanh toán",
           variant: "destructive",
         });
       }
     } catch {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: "Lỗi",
+        description: "Đã xảy ra lỗi không mong muốn",
         variant: "destructive",
       });
     } finally {
@@ -130,7 +130,9 @@ export function PaymentHistory({ patientId }: PaymentHistoryProps) {
     return (
       <Card>
         <CardContent className="p-6 text-center">
-          <p className="text-muted-foreground">No payment history found.</p>
+          <p className="text-muted-foreground">
+            Không tìm thấy lịch sử thanh toán.
+          </p>
         </CardContent>
       </Card>
     );
@@ -139,12 +141,10 @@ export function PaymentHistory({ patientId }: PaymentHistoryProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Total {total} payment{total !== 1 ? "s" : ""}
-        </p>
+        <p className="text-sm text-muted-foreground">Tổng {total} thanh toán</p>
         <Button variant="outline" size="sm" onClick={loadPayments}>
           <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
+          Làm mới
         </Button>
       </div>
 
@@ -155,7 +155,7 @@ export function PaymentHistory({ patientId }: PaymentHistoryProps) {
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
-                    <h3 className="font-semibold">Payment #{payment.id}</h3>
+                    <h3 className="font-semibold">Thanh toán #{payment.id}</h3>
                     <Badge
                       className={getStatusColor(payment.status || "pending")}
                     >
@@ -165,20 +165,20 @@ export function PaymentHistory({ patientId }: PaymentHistoryProps) {
 
                   <div className="text-sm text-muted-foreground space-y-1">
                     <p>
-                      <span className="font-medium">Doctor:</span>{" "}
+                      <span className="font-medium">Bác sĩ:</span>{" "}
                       {payment.appointments.doctors.user_profiles.full_name}
                     </p>
                     <p>
-                      <span className="font-medium">Appointment:</span>{" "}
-                      {formatDate(payment.appointments.appointment_date)} at{" "}
+                      <span className="font-medium">Lịch hẹn:</span>{" "}
+                      {formatDate(payment.appointments.appointment_date)} lúc{" "}
                       {formatTime(payment.appointments.appointment_time)}
                     </p>
                     <p>
-                      <span className="font-medium">Method:</span>{" "}
+                      <span className="font-medium">Phương thức:</span>{" "}
                       {getPaymentMethodText(payment.payment_method)}
                     </p>
                     <p>
-                      <span className="font-medium">Date:</span>{" "}
+                      <span className="font-medium">Ngày:</span>{" "}
                       {formatDate(payment.created_at || "")}
                     </p>
                   </div>
@@ -193,7 +193,7 @@ export function PaymentHistory({ patientId }: PaymentHistoryProps) {
                     <Button variant="outline" size="sm" asChild>
                       <Link href={`/payments/${payment.id}`}>
                         <Eye className="h-4 w-4 mr-2" />
-                        View
+                        Xem
                       </Link>
                     </Button>
 
@@ -205,7 +205,7 @@ export function PaymentHistory({ patientId }: PaymentHistoryProps) {
                           rel="noopener noreferrer"
                         >
                           <Download className="h-4 w-4 mr-2" />
-                          Invoice
+                          Hóa đơn
                         </a>
                       </Button>
                     )}

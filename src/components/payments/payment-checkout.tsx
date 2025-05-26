@@ -33,26 +33,26 @@ interface PaymentCheckoutProps {
 const paymentMethods = [
   {
     id: "credit_card" as PaymentMethod,
-    name: "Credit Card",
-    description: "Pay with your credit or debit card",
+    name: "Thẻ tín dụng",
+    description: "Thanh toán bằng thẻ tín dụng hoặc thẻ ghi nợ",
     icon: CreditCard,
   },
   {
     id: "bank_transfer" as PaymentMethod,
-    name: "Bank Transfer",
-    description: "Transfer directly from your bank account",
+    name: "Chuyển khoản ngân hàng",
+    description: "Chuyển khoản trực tiếp từ tài khoản ngân hàng",
     icon: Building,
   },
   {
     id: "wallet" as PaymentMethod,
-    name: "Digital Wallet",
-    description: "Pay with MoMo, ZaloPay, or other e-wallets",
+    name: "Ví điện tử",
+    description: "Thanh toán bằng MoMo, ZaloPay hoặc ví điện tử khác",
     icon: Wallet,
   },
   {
     id: "cash" as PaymentMethod,
-    name: "Cash",
-    description: "Pay in cash at the clinic",
+    name: "Tiền mặt",
+    description: "Thanh toán bằng tiền mặt tại phòng khám",
     icon: Banknote,
   },
 ];
@@ -83,8 +83,8 @@ export function PaymentCheckout({ appointmentId }: PaymentCheckoutProps) {
 
       if (!createResult.success) {
         toast({
-          title: "Error",
-          description: createResult.error || "Failed to create payment",
+          title: "Lỗi",
+          description: createResult.error || "Không thể tạo thanh toán",
           variant: "destructive",
         });
         return;
@@ -93,8 +93,9 @@ export function PaymentCheckout({ appointmentId }: PaymentCheckoutProps) {
       // For cash payments, redirect immediately
       if (selectedMethod === "cash") {
         toast({
-          title: "Success",
-          description: "Payment method set to cash. Please pay at the clinic.",
+          title: "Thành công",
+          description:
+            "Phương thức thanh toán đã được đặt là tiền mặt. Vui lòng thanh toán tại phòng khám.",
         });
         router.push(`/payments/${createResult.paymentId}`);
         return;
@@ -115,22 +116,22 @@ export function PaymentCheckout({ appointmentId }: PaymentCheckoutProps) {
 
         if (processResult.success) {
           toast({
-            title: "Payment Successful",
-            description: "Your payment has been processed successfully",
+            title: "Thanh toán thành công",
+            description: "Thanh toán của bạn đã được xử lý thành công",
           });
           router.push(`/payments/${createResult.paymentId}`);
         } else {
           toast({
-            title: "Payment Failed",
-            description: processResult.error || "Payment processing failed",
+            title: "Thanh toán thất bại",
+            description: processResult.error || "Xử lý thanh toán thất bại",
             variant: "destructive",
           });
         }
       }
     } catch {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: "Lỗi",
+        description: "Đã xảy ra lỗi không mong muốn",
         variant: "destructive",
       });
     } finally {
@@ -143,8 +144,8 @@ export function PaymentCheckout({ appointmentId }: PaymentCheckoutProps) {
       {/* Payment Method */}
       <Card>
         <CardHeader>
-          <CardTitle>Payment Method</CardTitle>
-          <CardDescription>Choose how you want to pay</CardDescription>
+          <CardTitle>Phương thức thanh toán</CardTitle>
+          <CardDescription>Chọn cách bạn muốn thanh toán</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <RadioGroup
@@ -179,10 +180,10 @@ export function PaymentCheckout({ appointmentId }: PaymentCheckoutProps) {
           {/* Credit Card Form */}
           {selectedMethod === "credit_card" && (
             <div className="space-y-4 border-t pt-4">
-              <h4 className="font-medium">Card Details</h4>
+              <h4 className="font-medium">Thông tin thẻ</h4>
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <Label htmlFor="cardName">Cardholder Name</Label>
+                  <Label htmlFor="cardName">Tên chủ thẻ</Label>
                   <Input
                     id="cardName"
                     placeholder="John Doe"
@@ -196,7 +197,7 @@ export function PaymentCheckout({ appointmentId }: PaymentCheckoutProps) {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="cardNumber">Card Number</Label>
+                  <Label htmlFor="cardNumber">Số thẻ</Label>
                   <Input
                     id="cardNumber"
                     placeholder="1234 5678 9012 3456"
@@ -211,7 +212,7 @@ export function PaymentCheckout({ appointmentId }: PaymentCheckoutProps) {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="expiry">Expiry Date</Label>
+                    <Label htmlFor="expiry">Ngày hết hạn</Label>
                     <Input
                       id="expiry"
                       placeholder="MM/YY"
@@ -245,7 +246,7 @@ export function PaymentCheckout({ appointmentId }: PaymentCheckoutProps) {
 
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Lock className="h-4 w-4" />
-            <span>Your payment information is secure and encrypted</span>
+            <span>Thông tin thanh toán của bạn được bảo mật và mã hóa</span>
           </div>
 
           <Button
@@ -255,11 +256,11 @@ export function PaymentCheckout({ appointmentId }: PaymentCheckoutProps) {
             size="lg"
           >
             {processing ? (
-              "Processing..."
+              "Đang xử lý..."
             ) : (
               <>
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Complete Payment
+                Hoàn tất thanh toán
               </>
             )}
           </Button>

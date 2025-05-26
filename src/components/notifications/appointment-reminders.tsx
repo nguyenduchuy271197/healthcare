@@ -46,15 +46,15 @@ export function AppointmentReminders({ userId }: AppointmentRemindersProps) {
         setNotifications(reminderNotifications);
       } else {
         toast({
-          title: "Error",
-          description: result.error || "Failed to load notifications",
+          title: "Lỗi",
+          description: result.error || "Không thể tải thông báo",
           variant: "destructive",
         });
       }
     } catch {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: "Lỗi",
+        description: "Đã xảy ra lỗi không mong muốn",
         variant: "destructive",
       });
     } finally {
@@ -80,15 +80,15 @@ export function AppointmentReminders({ userId }: AppointmentRemindersProps) {
         );
       } else {
         toast({
-          title: "Error",
-          description: result.error || "Failed to mark notification as read",
+          title: "Lỗi",
+          description: result.error || "Không thể đánh dấu thông báo đã đọc",
           variant: "destructive",
         });
       }
     } catch {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: "Lỗi",
+        description: "Đã xảy ra lỗi không mong muốn",
         variant: "destructive",
       });
     }
@@ -100,22 +100,22 @@ export function AppointmentReminders({ userId }: AppointmentRemindersProps) {
 
       if (result.success) {
         toast({
-          title: "Reminder Sent",
-          description: "Appointment reminder has been sent successfully",
+          title: "Đã gửi nhắc nhở",
+          description: "Thông báo nhắc nhở lịch hẹn đã được gửi thành công",
         });
         // Reload notifications to show the new reminder
         loadNotifications();
       } else {
         toast({
-          title: "Error",
-          description: result.error || "Failed to send reminder",
+          title: "Lỗi",
+          description: result.error || "Không thể gửi thông báo nhắc nhở",
           variant: "destructive",
         });
       }
     } catch {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: "Lỗi",
+        description: "Đã xảy ra lỗi không mong muốn",
         variant: "destructive",
       });
     }
@@ -154,7 +154,7 @@ export function AppointmentReminders({ userId }: AppointmentRemindersProps) {
         <CardContent className="p-6 text-center">
           <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground">
-            No appointment reminders found.
+            Không tìm thấy thông báo nhắc nhở lịch hẹn.
           </p>
         </CardContent>
       </Card>
@@ -164,9 +164,9 @@ export function AppointmentReminders({ userId }: AppointmentRemindersProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Appointment Reminders</h3>
+        <h3 className="text-lg font-semibold">Thông báo nhắc nhở lịch hẹn</h3>
         <Badge variant="secondary">
-          {notifications.filter((n) => !n.is_read).length} unread
+          {notifications.filter((n) => !n.is_read).length} chưa đọc
         </Badge>
       </div>
 
@@ -198,7 +198,7 @@ export function AppointmentReminders({ userId }: AppointmentRemindersProps) {
                       <h4 className="font-medium">{notification.title}</h4>
                       {!notification.is_read && (
                         <Badge variant="default" className="text-xs">
-                          New
+                          Mới
                         </Badge>
                       )}
                     </div>
@@ -222,7 +222,7 @@ export function AppointmentReminders({ userId }: AppointmentRemindersProps) {
                               <Calendar className="h-3 w-3" />
                               <span>
                                 {formatDate(notification.data.appointment_date)}{" "}
-                                at{" "}
+                                lúc{" "}
                                 {formatTime(notification.data.appointment_time)}
                               </span>
                             </div>
@@ -266,7 +266,7 @@ export function AppointmentReminders({ userId }: AppointmentRemindersProps) {
                       }
                     >
                       <Bell className="h-4 w-4 mr-1" />
-                      Resend
+                      Gửi lại
                     </Button>
                   )}
                 </div>

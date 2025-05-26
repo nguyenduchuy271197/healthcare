@@ -104,15 +104,15 @@ export function UpcomingAppointmentsWidget({
         setAppointments(upcoming);
       } else {
         toast({
-          title: "Error",
-          description: result.error || "Failed to load appointments",
+          title: "Lỗi",
+          description: result.error || "Không thể tải lịch hẹn",
           variant: "destructive",
         });
       }
     } catch {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: "Lỗi",
+        description: "Đã xảy ra lỗi không mong muốn",
         variant: "destructive",
       });
     } finally {
@@ -128,8 +128,8 @@ export function UpcomingAppointmentsWidget({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Upcoming Appointments</CardTitle>
-          <CardDescription>Your next appointments</CardDescription>
+          <CardTitle>Lịch hẹn sắp tới</CardTitle>
+          <CardDescription>Các lịch hẹn tiếp theo của bạn</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -154,15 +154,15 @@ export function UpcomingAppointmentsWidget({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Upcoming Appointments</CardTitle>
-          <CardDescription>Your next appointments</CardDescription>
+          <CardTitle>Lịch hẹn sắp tới</CardTitle>
+          <CardDescription>Các lịch hẹn tiếp theo của bạn</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-6">
             <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No upcoming appointments</p>
+            <p className="text-muted-foreground">Không có lịch hẹn sắp tới</p>
             <Button asChild className="mt-4">
-              <Link href="/doctors">Book an Appointment</Link>
+              <Link href="/doctors">Đặt lịch khám</Link>
             </Button>
           </div>
         </CardContent>
@@ -174,13 +174,13 @@ export function UpcomingAppointmentsWidget({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Upcoming Appointments</CardTitle>
+          <CardTitle>Lịch hẹn sắp tới</CardTitle>
           <CardDescription>
-            Your next {appointments.length} appointments
+            {appointments.length} lịch hẹn tiếp theo của bạn
           </CardDescription>
         </div>
         <Button variant="outline" size="sm" asChild>
-          <Link href="/appointments">View All</Link>
+          <Link href="/appointments">Xem tất cả</Link>
         </Button>
       </CardHeader>
       <CardContent>
@@ -220,11 +220,11 @@ export function UpcomingAppointmentsWidget({
                     <div className="flex-1">
                       <h4 className="font-medium">
                         {appointment.doctors?.user_profiles?.full_name ||
-                          "Doctor"}
+                          "Bác sĩ"}
                       </h4>
                       <p className="text-sm text-muted-foreground">
                         {appointment.doctors?.specialization ||
-                          "General Medicine"}
+                          "Khoa Tổng quát"}
                       </p>
                     </div>
                   </div>
@@ -246,7 +246,7 @@ export function UpcomingAppointmentsWidget({
                         className="text-orange-600 border-orange-200"
                       >
                         <BellRing className="h-3 w-3 mr-1" />
-                        Reminder Due
+                        Cần nhắc nhở
                       </Badge>
                     )}
                   </div>
@@ -265,11 +265,11 @@ export function UpcomingAppointmentsWidget({
 
                 <div className="flex items-center justify-between pt-2 border-t">
                   <div className="text-sm text-muted-foreground">
-                    <span className="font-medium">In {timeUntil}</span>
+                    <span className="font-medium">Còn {timeUntil}</span>
                     {appointment.reminder_sent && (
                       <span className="ml-2 text-green-600">
                         <Bell className="h-3 w-3 inline mr-1" />
-                        Reminder sent
+                        Đã gửi nhắc nhở
                       </span>
                     )}
                   </div>
