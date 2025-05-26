@@ -31,9 +31,9 @@ export default function NotificationsPage() {
       <div className="flex items-center gap-3">
         <Bell className="h-8 w-8 text-blue-600" />
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Thông báo</h1>
           <p className="text-muted-foreground">
-            Stay updated with appointment reminders and important updates
+            Cập nhật thông tin về lịch hẹn và các thông báo quan trọng
           </p>
         </div>
       </div>
