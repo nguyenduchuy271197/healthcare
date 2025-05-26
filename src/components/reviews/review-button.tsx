@@ -82,7 +82,7 @@ export function ReviewButton({
   if (isLoading) {
     return (
       <div
-        className={`animate-pulse bg-gray-200 rounded h-8 w-20 ${className}`}
+        className={`animate-pulse bg-gray-200 rounded-lg h-9 w-24 ${className}`}
       />
     );
   }
@@ -91,18 +91,18 @@ export function ReviewButton({
     return (
       <>
         <div className={`flex items-center space-x-2 ${className}`}>
-          <Badge variant="secondary" className="flex items-center space-x-1">
-            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-            <span>{existingReview.rating}/5</span>
+          <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white border-0 px-3 py-1 font-medium">
+            <Star className="h-3 w-3 fill-white mr-1" />
+            {existingReview.rating}/5
           </Badge>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => setIsFormOpen(true)}
-            className="h-8 px-2"
+            className="h-9 px-3 hover:bg-yellow-50 hover:border-yellow-200 hover:text-yellow-700 transition-colors"
           >
             <Edit className="h-3 w-3 mr-1" />
-            Sửa
+            Sửa đánh giá
           </Button>
         </div>
 
@@ -123,10 +123,10 @@ export function ReviewButton({
         variant="outline"
         size="sm"
         onClick={() => setIsFormOpen(true)}
-        className={`h-8 ${className}`}
+        className={`h-9 px-4 bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 border-blue-200 text-blue-700 hover:text-blue-800 transition-all duration-200 ${className}`}
       >
-        <MessageSquare className="h-3 w-3 mr-1" />
-        Đánh giá
+        <MessageSquare className="h-4 w-4 mr-2" />
+        Đánh giá bác sĩ
       </Button>
 
       <ReviewForm
