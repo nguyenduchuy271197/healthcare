@@ -49,6 +49,7 @@ export { sendAppointmentReminder } from "./notifications/send-appointment-remind
 
 // Review actions
 export { createReview } from "./reviews/create-review";
+export { getPatientReviews } from "./reviews/get-patient-reviews";
 
 // Payment actions
 export { createPayment } from "./payments/create-payment";

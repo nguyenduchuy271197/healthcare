@@ -24,11 +24,27 @@ interface GetDoctorReviewsResult {
 }
 
 export async function getDoctorReviews(
-  doctorId: string,
+  doctorId?: string,
   pagination: PaginationParams = {}
 ): Promise<GetDoctorReviewsResult> {
   try {
     const supabase = createClient();
+
+    let targetDoctorId = doctorId;
+
+    // If no doctorId provided, get current user
+    if (!targetDoctorId) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        return {
+          success: false,
+          error: "User not authenticated",
+        };
+      }
+
+      targetDoctorId = user.id;
+    }
 
     const limit = pagination.limit || 10;
     const offset = pagination.offset || 0;
@@ -45,7 +61,7 @@ export async function getDoctorReviews(
           )
         )
       `, { count: "exact" })
-      .eq("doctor_id", doctorId)
+      .eq("doctor_id", targetDoctorId)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 

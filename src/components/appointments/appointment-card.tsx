@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { AppointmentStatus } from "@/types/custom.types";
 import { AppointmentWithDoctor } from "./types";
+import { ReviewButton } from "@/components/reviews/review-button";
 
 interface AppointmentCardProps {
   appointment: AppointmentWithDoctor;
@@ -136,7 +137,7 @@ export function AppointmentCard({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -174,6 +175,13 @@ export function AppointmentCard({
                 </Button>
               </>
             )}
+
+            {/* Review Button */}
+            <ReviewButton
+              appointmentId={appointment.id}
+              doctorName={appointment.doctors.user_profiles.full_name}
+              appointmentStatus={appointment.status || "pending"}
+            />
           </div>
         </div>
       </CardContent>

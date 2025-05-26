@@ -15,6 +15,7 @@ import { Calendar, Clock, Users, DollarSign } from "lucide-react";
 import { Appointment } from "@/types/custom.types";
 import { getDoctorAppointments } from "@/actions";
 import { DoctorScheduleSummary } from "@/components/doctors/doctor-schedule-summary";
+import { DoctorReviewsWidget } from "@/components/dashboard/doctor-reviews-widget";
 
 export function DoctorDashboard() {
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
@@ -205,8 +206,14 @@ export function DoctorDashboard() {
         </CardContent>
       </Card>
 
-      {/* Schedule Summary */}
-      <DoctorScheduleSummary />
+      {/* Two Column Layout */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Schedule Summary */}
+        <DoctorScheduleSummary />
+        
+        {/* Reviews Widget */}
+        <DoctorReviewsWidget />
+      </div>
     </div>
   );
 }

@@ -26,6 +26,7 @@ import {
   CreditCard,
   Bell,
   Pill,
+  Star,
 } from "lucide-react";
 import { Profile } from "@/types/custom.types";
 
@@ -72,6 +73,11 @@ export function Sidebar({ userProfile, className }: SidebarProps) {
       icon: CreditCard,
     },
     {
+      title: "Đánh giá",
+      href: "/reviews",
+      icon: Star,
+    },
+    {
       title: "Thông báo",
       href: "/notifications",
       icon: Bell,
@@ -113,6 +119,11 @@ export function Sidebar({ userProfile, className }: SidebarProps) {
       title: "Lịch làm việc",
       href: "/schedule",
       icon: Clock,
+    },
+    {
+      title: "Đánh giá",
+      href: "/reviews",
+      icon: Star,
     },
     {
       title: "Thông báo",
