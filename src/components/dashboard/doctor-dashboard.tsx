@@ -181,11 +181,9 @@ export function DoctorDashboard() {
                   </div>
                 </div>
               ))}
-              <Link href="/appointments/manage">
-                <Button variant="outline" className="w-full">
-                  Xem tất cả lịch hẹn
-                </Button>
-              </Link>
+              <Button variant="outline" className="w-full" asChild>
+                <Link href="/appointments/manage">Xem tất cả lịch hẹn</Link>
+              </Button>
             </div>
           ) : (
             <div className="text-center py-8">
@@ -210,7 +208,7 @@ export function DoctorDashboard() {
       <div className="grid gap-6 md:grid-cols-2">
         {/* Schedule Summary */}
         <DoctorScheduleSummary />
-        
+
         {/* Reviews Widget */}
         <DoctorReviewsWidget />
       </div>

@@ -26,7 +26,6 @@ import {
   User,
   Stethoscope,
   GraduationCap,
-  Clock,
   X,
 } from "lucide-react";
 import { Doctor } from "@/types/custom.types";
@@ -458,7 +457,6 @@ export function DoctorSearch() {
                           </span>
                         </div>
                         <div className="flex items-center space-x-1">
-                          <Clock className="h-3 w-3 text-purple-500" />
                           <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs font-medium">
                             {doctor.experience_years || 0} năm KN
                           </Badge>

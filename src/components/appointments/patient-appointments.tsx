@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Filter } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { Appointment } from "@/types/custom.types";
 import { getPatientAppointments } from "@/actions";
 import { AppointmentRescheduleForm } from "./appointment-reschedule-form";
