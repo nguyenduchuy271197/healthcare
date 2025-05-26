@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -24,7 +24,6 @@ import {
   Filter,
   Loader2,
   User,
-  Calendar,
 } from "lucide-react";
 import { Doctor } from "@/types/custom.types";
 import { searchDoctors } from "@/actions";
@@ -59,10 +58,10 @@ interface SearchFilters {
 export function DoctorSearch() {
   const [filters, setFilters] = useState<SearchFilters>({
     search: "",
-    specialization: "",
+    specialization: "all",
     location: "",
-    minRating: "",
-    minExperience: "",
+    minRating: "all",
+    minExperience: "all",
     maxFee: "",
     isAvailable: true,
   });
@@ -87,19 +86,26 @@ export function DoctorSearch() {
 
   const handleSearch = useCallback(
     async (loadMore = false) => {
-      setIsLoading(true);
+      if (!loadMore) {
+        setIsLoading(true);
+      }
 
       try {
         const searchFilters = {
           search: filters.search.trim() || undefined,
-          specialization: filters.specialization || undefined,
+          specialization:
+            filters.specialization === "all"
+              ? undefined
+              : filters.specialization,
           location: filters.location.trim() || undefined,
-          minRating: filters.minRating
-            ? parseFloat(filters.minRating)
-            : undefined,
-          minExperience: filters.minExperience
-            ? parseInt(filters.minExperience)
-            : undefined,
+          minRating:
+            filters.minRating === "all"
+              ? undefined
+              : parseFloat(filters.minRating),
+          minExperience:
+            filters.minExperience === "all"
+              ? undefined
+              : parseInt(filters.minExperience),
           maxFee: filters.maxFee ? parseFloat(filters.maxFee) : undefined,
           isAvailable: filters.isAvailable,
           limit: ITEMS_PER_PAGE,
@@ -138,8 +144,12 @@ export function DoctorSearch() {
   );
 
   useEffect(() => {
-    handleSearch();
-  }, [handleSearch]);
+    const timeoutId = setTimeout(() => {
+      handleSearch();
+    }, 300); // Debounce search
+
+    return () => clearTimeout(timeoutId);
+  }, [filters]);
 
   function handleFilterChange(
     key: keyof SearchFilters,
@@ -151,10 +161,10 @@ export function DoctorSearch() {
   function clearFilters() {
     setFilters({
       search: "",
-      specialization: "",
+      specialization: "all",
       location: "",
-      minRating: "",
-      minExperience: "",
+      minRating: "all",
+      minExperience: "all",
       maxFee: "",
       isAvailable: true,
     });
@@ -180,47 +190,32 @@ export function DoctorSearch() {
   return (
     <div className="space-y-6">
       {/* Search and Filters */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Search className="h-5 w-5" />
-              Tìm kiếm bác sĩ
-            </CardTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Bộ lọc
-            </Button>
+      {/* Main Search */}
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Tìm kiếm theo tên bác sĩ, chuyên khoa..."
+              value={filters.search}
+              onChange={(e) => handleFilterChange("search", e.target.value)}
+              className="pl-10"
+            />
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Main Search */}
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <Input
-                placeholder="Tìm kiếm theo tên bác sĩ, chuyên khoa..."
-                value={filters.search}
-                onChange={(e) => handleFilterChange("search", e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    handleSearch();
-                  }
-                }}
-              />
-            </div>
-            <Button onClick={() => handleSearch()} disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Tìm kiếm
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setShowFilters(!showFilters)}
+            className={showFilters ? "bg-primary text-primary-foreground" : ""}
+          >
+            <Filter className="h-4 w-4" />
+          </Button>
+        </div>
 
-          {/* Advanced Filters */}
-          {showFilters && (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4 border-t">
+        {/* Advanced Filters */}
+        {showFilters && (
+          <div className="space-y-4 pt-4 border-t">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-2">
                 <Label>Chuyên khoa</Label>
                 <Select
@@ -233,7 +228,7 @@ export function DoctorSearch() {
                     <SelectValue placeholder="Chọn chuyên khoa" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tất cả chuyên khoa</SelectItem>
+                    <SelectItem value="all">Tất cả chuyên khoa</SelectItem>
                     {SPECIALIZATIONS.map((spec) => (
                       <SelectItem key={spec} value={spec}>
                         {spec}
@@ -266,7 +261,7 @@ export function DoctorSearch() {
                     <SelectValue placeholder="Chọn đánh giá" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tất cả đánh giá</SelectItem>
+                    <SelectItem value="all">Tất cả đánh giá</SelectItem>
                     <SelectItem value="4">4+ sao</SelectItem>
                     <SelectItem value="3">3+ sao</SelectItem>
                     <SelectItem value="2">2+ sao</SelectItem>
@@ -286,7 +281,7 @@ export function DoctorSearch() {
                     <SelectValue placeholder="Chọn kinh nghiệm" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tất cả</SelectItem>
+                    <SelectItem value="all">Tất cả</SelectItem>
                     <SelectItem value="1">1+ năm</SelectItem>
                     <SelectItem value="3">3+ năm</SelectItem>
                     <SelectItem value="5">5+ năm</SelectItem>
@@ -304,25 +299,35 @@ export function DoctorSearch() {
                   onChange={(e) => handleFilterChange("maxFee", e.target.value)}
                 />
               </div>
-
-              <div className="flex items-center justify-between">
-                <Button variant="outline" onClick={clearFilters}>
-                  Xóa bộ lọc
-                </Button>
-                <Button onClick={() => handleSearch()}>Áp dụng bộ lọc</Button>
-              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            <div className="flex items-center justify-between pt-4 border-t">
+              <Button variant="outline" onClick={clearFilters}>
+                Xóa bộ lọc
+              </Button>
+              <Button onClick={() => handleSearch()}>Áp dụng bộ lọc</Button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Search Results */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">
-            Kết quả tìm kiếm ({total} bác sĩ)
-          </h2>
-        </div>
+        {total > 0 && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Tìm thấy{" "}
+              <span className="font-semibold text-foreground">{total}</span> bác
+              sĩ
+            </p>
+            {isLoading && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Đang tìm kiếm...
+              </div>
+            )}
+          </div>
+        )}
 
         {isLoading && doctors.length === 0 ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -355,28 +360,28 @@ export function DoctorSearch() {
                   className="hover:shadow-md transition-shadow cursor-pointer"
                   onClick={() => handleDoctorClick(doctor.id)}
                 >
-                  <CardContent className="p-6">
-                    <div className="space-y-4">
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
                       {/* Doctor Info */}
                       <div className="flex items-start space-x-3">
-                        <Avatar className="h-12 w-12">
+                        <Avatar className="h-10 w-10">
                           <AvatarImage
                             src={doctor.user_profiles.avatar_url || ""}
                             alt={doctor.user_profiles.full_name}
                           />
                           <AvatarFallback>
-                            <User className="h-6 w-6" />
+                            <User className="h-5 w-5" />
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-lg truncate">
+                          <h3 className="font-semibold truncate">
                             {doctor.user_profiles.full_name}
                           </h3>
                           <p className="text-sm text-muted-foreground">
                             {doctor.specialization || "Bác sĩ đa khoa"}
                           </p>
                           {doctor.qualification && (
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs text-muted-foreground truncate">
                               {doctor.qualification}
                             </p>
                           )}
@@ -398,8 +403,8 @@ export function DoctorSearch() {
 
                       {/* Location */}
                       {doctor.clinic_address && (
-                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                          <MapPin className="h-4 w-4" />
+                        <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                          <MapPin className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate">
                             {doctor.clinic_address}
                           </span>
@@ -407,9 +412,9 @@ export function DoctorSearch() {
                       )}
 
                       {/* Fee and Availability */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-1 text-sm">
-                          <DollarSign className="h-4 w-4" />
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center space-x-1">
+                          <DollarSign className="h-3 w-3" />
                           <span>
                             {doctor.consultation_fee?.toLocaleString("vi-VN")}{" "}
                             VNĐ
@@ -419,21 +424,11 @@ export function DoctorSearch() {
                           variant={
                             doctor.is_available ? "default" : "secondary"
                           }
+                          className="text-xs"
                         >
-                          {doctor.is_available
-                            ? "Có thể đặt lịch"
-                            : "Không khả dụng"}
+                          {doctor.is_available ? "Khả dụng" : "Bận"}
                         </Badge>
                       </div>
-
-                      {/* Action Button */}
-                      <Button
-                        className="w-full"
-                        disabled={!doctor.is_available}
-                      >
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Xem chi tiết & Đặt lịch
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
