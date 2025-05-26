@@ -24,6 +24,10 @@ import {
   Filter,
   Loader2,
   User,
+  Stethoscope,
+  GraduationCap,
+  Clock,
+  X,
 } from "lucide-react";
 import { Doctor } from "@/types/custom.types";
 import { searchDoctors } from "@/actions";
@@ -92,7 +96,6 @@ export function DoctorSearch() {
 
       try {
         const searchFilters = {
-          search: filters.search.trim() || undefined,
           specialization:
             filters.specialization === "all"
               ? undefined
@@ -187,44 +190,86 @@ export function DoctorSearch() {
     router.push(`/doctors/${doctorId}`);
   }
 
+  function getActiveFiltersCount() {
+    let count = 0;
+    if (filters.specialization !== "all") count++;
+    if (filters.location.trim()) count++;
+    if (filters.minRating !== "all") count++;
+    if (filters.minExperience !== "all") count++;
+    if (filters.maxFee.trim()) count++;
+    return count;
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Search and Filters */}
-      {/* Main Search */}
-      <div className="space-y-4">
-        <div className="flex gap-2">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Tìm kiếm theo tên bác sĩ, chuyên khoa..."
-              value={filters.search}
-              onChange={(e) => handleFilterChange("search", e.target.value)}
-              className="pl-10"
-            />
-          </div>
+    <div className="space-y-4">
+      {/* Filters and Results Header */}
+      <div className="flex items-center justify-between">
+        {/* Filters */}
+        <div className="flex items-center gap-3">
           <Button
             variant="outline"
-            size="icon"
             onClick={() => setShowFilters(!showFilters)}
-            className={showFilters ? "bg-primary text-primary-foreground" : ""}
+            className={`px-4 py-2 ${
+              showFilters ? "bg-blue-500 text-white border-blue-500" : ""
+            }`}
           >
-            <Filter className="h-4 w-4" />
+            <Filter className="h-4 w-4 mr-2" />
+            Bộ lọc
+            {getActiveFiltersCount() > 0 && (
+              <Badge className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5">
+                {getActiveFiltersCount()}
+              </Badge>
+            )}
           </Button>
         </div>
 
-        {/* Advanced Filters */}
-        {showFilters && (
-          <div className="space-y-4 pt-4 border-t">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <div className="space-y-2">
-                <Label>Chuyên khoa</Label>
+        {/* Results Count */}
+        {total > 0 && (
+          <div className="flex items-center space-x-2">
+            <div className="bg-blue-100 rounded-full p-2">
+              <Search className="h-4 w-4 text-blue-600" />
+            </div>
+            <p className="text-sm text-gray-600">
+              Tìm thấy <span className="font-bold text-blue-600">{total}</span>{" "}
+              bác sĩ
+            </p>
+            {isLoading && (
+              <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Advanced Filters */}
+      {showFilters && (
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Bộ lọc nâng cao
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowFilters(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-gray-700">
+                  Chuyên khoa
+                </Label>
                 <Select
                   value={filters.specialization}
                   onValueChange={(value) =>
                     handleFilterChange("specialization", value)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11">
                     <SelectValue placeholder="Chọn chuyên khoa" />
                   </SelectTrigger>
                   <SelectContent>
@@ -238,26 +283,31 @@ export function DoctorSearch() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Địa điểm</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-gray-700">
+                  Địa điểm
+                </Label>
                 <Input
                   placeholder="Nhập địa chỉ phòng khám"
                   value={filters.location}
                   onChange={(e) =>
                     handleFilterChange("location", e.target.value)
                   }
+                  className="h-11"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Đánh giá tối thiểu</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-gray-700">
+                  Đánh giá tối thiểu
+                </Label>
                 <Select
                   value={filters.minRating}
                   onValueChange={(value) =>
                     handleFilterChange("minRating", value)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11">
                     <SelectValue placeholder="Chọn đánh giá" />
                   </SelectTrigger>
                   <SelectContent>
@@ -269,15 +319,17 @@ export function DoctorSearch() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Kinh nghiệm tối thiểu (năm)</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-gray-700">
+                  Kinh nghiệm tối thiểu
+                </Label>
                 <Select
                   value={filters.minExperience}
                   onValueChange={(value) =>
                     handleFilterChange("minExperience", value)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11">
                     <SelectValue placeholder="Chọn kinh nghiệm" />
                   </SelectTrigger>
                   <SelectContent>
@@ -290,61 +342,59 @@ export function DoctorSearch() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Phí khám tối đa (VNĐ)</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-gray-700">
+                  Phí khám tối đa (VNĐ)
+                </Label>
                 <Input
                   type="number"
                   placeholder="Nhập phí khám tối đa"
                   value={filters.maxFee}
                   onChange={(e) => handleFilterChange("maxFee", e.target.value)}
+                  className="h-11"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t">
-              <Button variant="outline" onClick={clearFilters}>
+            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+              <Button
+                variant="outline"
+                onClick={clearFilters}
+                className="hover:bg-red-50 hover:border-red-200 hover:text-red-700"
+              >
+                <X className="h-4 w-4 mr-2" />
                 Xóa bộ lọc
               </Button>
-              <Button onClick={() => handleSearch()}>Áp dụng bộ lọc</Button>
+              <Button
+                onClick={() => handleSearch()}
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              >
+                <Search className="h-4 w-4 mr-2" />
+                Áp dụng bộ lọc
+              </Button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Search Results */}
-      <div className="space-y-4">
-        {total > 0 && (
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Tìm thấy{" "}
-              <span className="font-semibold text-foreground">{total}</span> bác
-              sĩ
-            </p>
-            {isLoading && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Đang tìm kiếm...
-              </div>
-            )}
-          </div>
-        )}
-
+      <div className="space-y-6">
         {isLoading && doctors.length === 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i}>
+              <Card key={i} className="overflow-hidden">
                 <CardContent className="p-6">
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="h-14 w-14 rounded-full bg-gray-200 animate-pulse" />
                       <div className="space-y-2 flex-1">
-                        <div className="h-4 bg-muted rounded animate-pulse" />
-                        <div className="h-3 bg-muted rounded w-2/3 animate-pulse" />
+                        <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                        <div className="h-3 bg-gray-200 rounded w-2/3 animate-pulse" />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <div className="h-3 bg-muted rounded animate-pulse" />
-                      <div className="h-3 bg-muted rounded w-3/4 animate-pulse" />
+                      <div className="h-3 bg-gray-200 rounded animate-pulse" />
+                      <div className="h-3 bg-gray-200 rounded w-3/4 animate-pulse" />
                     </div>
                   </div>
                 </CardContent>
@@ -353,37 +403,45 @@ export function DoctorSearch() {
           </div>
         ) : doctors.length > 0 ? (
           <>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {doctors.map((doctor) => (
                 <Card
                   key={doctor.id}
-                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 bg-gradient-to-br from-white to-gray-50/50 overflow-hidden"
                   onClick={() => handleDoctorClick(doctor.id)}
                 >
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
-                      {/* Doctor Info */}
-                      <div className="flex items-start space-x-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage
-                            src={doctor.user_profiles.avatar_url || ""}
-                            alt={doctor.user_profiles.full_name}
-                          />
-                          <AvatarFallback>
-                            <User className="h-5 w-5" />
-                          </AvatarFallback>
-                        </Avatar>
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      {/* Doctor Header */}
+                      <div className="flex items-start space-x-4">
+                        <div className="relative">
+                          <Avatar className="h-14 w-14 ring-2 ring-white shadow-lg group-hover:scale-105 transition-transform">
+                            <AvatarImage
+                              src={doctor.user_profiles.avatar_url || ""}
+                              alt={doctor.user_profiles.full_name}
+                            />
+                            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                              <User className="h-7 w-7" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 shadow-sm">
+                            <Stethoscope className="h-3 w-3 text-blue-600" />
+                          </div>
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold truncate">
+                          <h3 className="font-bold text-lg text-gray-900 truncate group-hover:text-blue-600 transition-colors">
                             {doctor.user_profiles.full_name}
                           </h3>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm font-medium text-blue-600">
                             {doctor.specialization || "Bác sĩ đa khoa"}
                           </p>
                           {doctor.qualification && (
-                            <p className="text-xs text-muted-foreground truncate">
-                              {doctor.qualification}
-                            </p>
+                            <div className="flex items-center space-x-1 mt-1">
+                              <GraduationCap className="h-3 w-3 text-gray-400" />
+                              <p className="text-xs text-gray-500 truncate">
+                                {doctor.qualification}
+                              </p>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -391,40 +449,60 @@ export function DoctorSearch() {
                       {/* Rating and Experience */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-1">
-                          {getRatingStars(doctor.average_rating || 0)}
-                          <span className="text-sm text-muted-foreground ml-1">
+                          <div className="flex items-center space-x-1">
+                            {getRatingStars(doctor.average_rating || 0)}
+                          </div>
+                          <span className="text-sm font-medium text-gray-600 ml-1">
                             ({doctor.total_reviews || 0})
                           </span>
                         </div>
-                        <Badge variant="secondary">
-                          {doctor.experience_years || 0} năm KN
-                        </Badge>
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-3 w-3 text-purple-500" />
+                          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs font-medium">
+                            {doctor.experience_years || 0} năm KN
+                          </Badge>
+                        </div>
                       </div>
 
                       {/* Location */}
                       {doctor.clinic_address && (
-                        <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                          <MapPin className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">
+                        <div className="bg-orange-50 rounded-lg p-3 border border-orange-100">
+                          <div className="flex items-center space-x-2">
+                            <div className="bg-orange-500 rounded-full p-1">
+                              <MapPin className="h-3 w-3 text-white" />
+                            </div>
+                            <span className="text-xs font-medium text-orange-600 uppercase tracking-wide">
+                              Địa chỉ
+                            </span>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900 mt-1 truncate">
                             {doctor.clinic_address}
-                          </span>
+                          </p>
                         </div>
                       )}
 
                       {/* Fee and Availability */}
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center space-x-1">
-                          <DollarSign className="h-3 w-3" />
-                          <span>
-                            {doctor.consultation_fee?.toLocaleString("vi-VN")}{" "}
-                            VNĐ
-                          </span>
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                        <div className="flex items-center space-x-2">
+                          <div className="bg-green-500 rounded-full p-1">
+                            <DollarSign className="h-3 w-3 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-green-600 uppercase tracking-wide">
+                              Phí khám
+                            </p>
+                            <p className="text-sm font-bold text-gray-900">
+                              {doctor.consultation_fee?.toLocaleString("vi-VN")}{" "}
+                              VNĐ
+                            </p>
+                          </div>
                         </div>
                         <Badge
-                          variant={
-                            doctor.is_available ? "default" : "secondary"
-                          }
-                          className="text-xs"
+                          className={`font-medium px-3 py-1 ${
+                            doctor.is_available
+                              ? "bg-green-100 text-green-800 border-green-200"
+                              : "bg-gray-100 text-gray-600 border-gray-200"
+                          }`}
                         >
                           {doctor.is_available ? "Khả dụng" : "Bận"}
                         </Badge>
@@ -440,27 +518,40 @@ export function DoctorSearch() {
               <div className="text-center">
                 <Button
                   variant="outline"
+                  size="lg"
                   onClick={() => handleSearch(true)}
                   disabled={isLoading}
+                  className="bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 border-blue-200 text-blue-700 hover:text-blue-800 px-8 py-3"
                 >
                   {isLoading && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   )}
-                  Xem thêm bác sĩ
+                  Xem thêm bác sĩ ({doctors.length}/{total})
                 </Button>
               </div>
             )}
           </>
         ) : (
-          <Card>
-            <CardContent className="text-center py-12">
-              <Search className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-medium">
+          <Card className="bg-gradient-to-br from-gray-50 to-white border-gray-200">
+            <CardContent className="text-center py-16">
+              <div className="bg-gray-100 rounded-full p-4 w-20 h-20 mx-auto mb-4">
+                <Search className="h-12 w-12 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 Không tìm thấy bác sĩ
               </h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc
+              <p className="text-gray-600 mb-6">
+                Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc để tìm thấy bác sĩ phù
+                hợp
               </p>
+              <Button
+                variant="outline"
+                onClick={clearFilters}
+                className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Xóa tất cả bộ lọc
+              </Button>
             </CardContent>
           </Card>
         )}
