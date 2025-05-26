@@ -419,6 +419,7 @@ export function DoctorSearch() {
                             <AvatarImage
                               src={doctor.user_profiles.avatar_url || ""}
                               alt={doctor.user_profiles.full_name}
+                              className="object-cover"
                             />
                             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
                               <User className="h-7 w-7" />
