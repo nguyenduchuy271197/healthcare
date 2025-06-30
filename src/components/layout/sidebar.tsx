@@ -141,12 +141,12 @@ export function Sidebar({ userProfile, className }: SidebarProps) {
       >
         <div className="flex items-center justify-between px-4 border-b h-14">
           {!collapsed && (
-            <div className="flex items-center">
+            <Link href="/" className="flex items-center">
               <Stethoscope className="h-6 w-6 mr-2" />
               <h2 className="text-lg font-semibold tracking-tight">
                 HealthCare
               </h2>
-            </div>
+            </Link>
           )}
 
           <Button
