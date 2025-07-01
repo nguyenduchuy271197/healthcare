@@ -17,7 +17,6 @@
 - **Backend**: Supabase, PostgreSQL
 - **State Management**: TanStack Query, React Hook Form
 - **Validation**: Zod
-- **Payment**: Stripe/VNPay integration
 
 ## 🚀 Quick Start
 
